@@ -1,0 +1,15 @@
+.filter {
+    color: white !important;
+    display: grid !important;
+    margin: auto !important;
+}
+
+.feedback {
+    color: red;
+    text-align: center;
+}
+
+.filterText {
+    margin-left: 2rem;
+    padding: 0.1em;
+}
