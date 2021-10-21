@@ -20,4 +20,5 @@ module.exports = {
     matchList: require('../matches/match.model'),
     Listing: require('../listings/listing.model'),
     Location: require('../locations/location.model'),
+    Chat: require('../chat/chat.model'),
 };

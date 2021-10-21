@@ -6,8 +6,8 @@ const matchState = require('../_helpers/match-state');
 
 // routes
 router.get('/', authorize(), getAll);
-router.get('/getSuccessMatchesForFlatee/:id', authorize(), getSuccessMatchesForFlatee);
-router.get('/getSuccessMatchesForListing/:id', authorize(), getSuccessMatchesForListing);
+router.get('/successMatchesForFlatee/:id', authorize(), getSuccessMatchesForFlatee);
+router.get('/successMatchesForListing/:id', authorize(), getSuccessMatchesForListing);
 router.get('/potentialMatchesForFlatee', authorize(), getPotentialMatchesForFlatee);
 router.get('/potentialMatchesForListing', authorize(), getPotentialMatchesForListing);
 router.post('/addListing', authorize(), addListing);
@@ -25,21 +25,18 @@ function getAll(req, res, next) {
 }
 
 function getSuccessMatchesForFlatee(req, res, next) {
-
     matchService.getSuccessMatchesForFlatee(req.params.id)
         .then(matches => res.json(matches))
         .catch(err => next(err));
 }
 
 function getSuccessMatchesForListing(req, res, next) {
-
     matchService.getSuccessMatchesForListing(req.params.id)
         .then(matches => res.json(matches))
         .catch(err => next(err));
 }
 
 function getPotentialMatchesForFlatee(req, res, next) {
-
     matchService.getPotentialMatchesForFlatee(req.query)
         .then(matches => res.json(matches))
         .catch(err => next(err));

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useAuth } from '../App/Authentication';
 import Link from '@material-ui/core/Link';
 import Box from '@material-ui/core/Box';
@@ -63,13 +63,6 @@ function ListingList(props) {
   const [listings, setListings] = useState([]);
   const [open, setOpen] = useState(false);
 
-  //Helper axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
   //Passes the selected listing to the listing page for displaying
   function selectListing(id) {
     props.history.push({
@@ -115,20 +108,12 @@ function ListingList(props) {
 
   //Fetch all listings owned by the current user on page load
   useEffect(() => {
-    async function getListings() {
-      const listings = await instance.get('/listings/flat/'.concat(user.id));
-      setListings(listings.data);
-    }
-    getListings();
-  }, [user, jwt])
-
-  useEffect(() => {
-    async function getListings() {
-      const listings = await instance.get('/listings/flat/'.concat(user.id));
-      setListings(listings.data);
-    }
-    getListings();
-  }, [open])
+    api.getFlatListingById(user.id, jwt)
+    .then((res) => {
+      setListings(res.data);
+    })
+    
+  }, [user, jwt, open])
 
   return (
     <Container component="main" maxWidth="xs">

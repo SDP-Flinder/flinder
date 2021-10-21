@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navigation from "../App/Navigation";
 import Button from '@material-ui/core/Button';
-import axios from 'axios';
-import { Config } from '../../config';
+import api from '../../utils/api';
 import { Grid } from "@material-ui/core";
 import { Grow } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
@@ -67,13 +66,6 @@ export default function Match(props) {
   const { user, jwt } = useAuth();
   const [matches, setMatches] = useState([]);
 
-  //Helper for ease of use when making axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
   //Render a set of buttons for each match loaded into the global state, depending on the role of the signed in account
   const renderButtons = () => {
     let count = 0;
@@ -137,7 +129,7 @@ export default function Match(props) {
     //Fetches all listings for the signed in flat account, to then be used to fetch their matches
     async function getListings() {
       var listings = [];
-      await instance.get('/listings/flat/'.concat(user.id))
+      api.getFlatListingById(user.id, jwt)
         .then(res => {
           listings = res.data
         }).catch((error) => {
@@ -150,8 +142,9 @@ export default function Match(props) {
 
     //Fetches all successful matches for a given listing
     async function getListingMatches(listing) {
-      await instance.get('/matches/getSuccessMatchesForListing/'.concat(listing.id))
+      api.getListingMatches(listing.id, jwt)
         .then(res => {
+          console.log(res.data);
           tempMatches = res.data
         }).catch((error) => {
           console.log('error ' + error);
@@ -163,9 +156,10 @@ export default function Match(props) {
 
     //Fetches all successful matches for the signed in flatee
     async function getFlateeMatches() {
-      await instance.get('/matches/getSuccessMatchesForFlatee/'.concat(user.id))
+      api.getFlateeMatches(user.id, jwt)
         .then(res => {
-          tempMatches = res.data
+          console.log(res.data);
+          tempMatches = res.data;
         }).catch((error) => {
           console.log('error ' + error);
         });

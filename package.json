@@ -7,6 +7,7 @@
     "start": "cd api && node server.js",
     "dev:api": "cd api && npm run dev",
     "dev:app": "cd client && npm start",
+    "dev:socket": "cd socket && npm run dev",
     "heroku-postbuild": "cd api && npm i --only=prod && cd ../client && npm i && npm i --only=dev --no-shrinkwrap && npm run build"
   },
   "repository": {
@@ -21,6 +22,7 @@
   "homepage": "https://github.com/SDP-Flinder/flinder#readme",
   "dependencies": {
     "dotenv-safe": "^8.2.0",
-    "helmet": "^4.6.0"
+    "helmet": "^4.6.0",
+    "npm-run-all": "^4.1.5"
   }
 }

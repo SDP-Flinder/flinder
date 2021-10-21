@@ -36,6 +36,7 @@ router.get('/logout', authorize(), logout);
 
 app.use('/api/', router);
 
+// Blacklist jwt (log out)
 function logout(req, res, next) {
   blacklist(req, res)
     // .then((msg) => res.json({message: msg}))

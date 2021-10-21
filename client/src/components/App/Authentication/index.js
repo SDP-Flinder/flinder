@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { Config } from '../../../config';
-
-const axiosapi = axios.create({
-    baseURL : Config.Local_API_URL
-});
+import api from "../../../utils/api";
 
 // JWT Storage in ether session or local (remember me)
 const getJWT = () => {
@@ -31,34 +27,22 @@ export const ProvideAuth = ({ children }) => {
 };
 
 const useProvideAuth = () => {
-  /* User object
-   * {role, firstname, lastname, username, createdDate, id}
-   */
   const jwt = getJWT();
   const [user, setUser] = useState(null);
-  // const isAuthed = user?.id ? true : false;
   const isAuthed = (user && jwt && jwtDecode(jwt).exp * 1000 > Date.now()) ? true : false;
 
   // Get current user data, if they are logged in
   useEffect(() => {
-    const getUser = async () => {
-      await axiosapi.get('/users/current', { 
-        headers: { 'Authorization': `bearer ${getJWT()}`}
-      })
+    // If JWT is stored then load user from api
+    if (jwt != null) {
+      api.getUser(jwt)
       .then((response) => {
         setUser(response.data)
-        
       })
       .catch(function (error) {
-          if(Config.Logging) 
-            console.log(error)
+          console.log(error)
           setUser(null)
-      })
-    }
-
-    console.log(jwt);
-    // If JWT is stored then load user
-    if (jwt != null) {getUser()}
+      })}
     // console.log(`User object: ${user}`);
     // console.log(`Is authed: ${isAuthed}`);
 
@@ -69,7 +53,7 @@ const useProvideAuth = () => {
 
   // Handle signing in
   const signin = async (username, password, remember) => {
-    return await axiosapi.post('/users/authenticate', { 
+    return api.authenticate({ 
       username: username, 
       password: password
     })
@@ -87,8 +71,7 @@ const useProvideAuth = () => {
         return response;
     })
     .catch(function (error) {
-        if(Config.Logging)
-            console.log(`Sign in Error: ${error}`);
+        console.log(`Sign in Error: ${error}`);
         return error;
     })
   };
@@ -98,9 +81,9 @@ const useProvideAuth = () => {
     console.log('Sign Out Called:');
     console.log(user);
     console.log(getJWT());
-    return axiosapi.get('/logout', { 
-      headers: { 'Authorization': `bearer ${getJWT()}`}
-    })
+
+    // Call API
+    return api.logout(jwt)
     .then(function () {
       localStorage.removeItem('jwt');
       sessionStorage.removeItem('jwt');
@@ -116,7 +99,7 @@ const useProvideAuth = () => {
 
   // Handle signing up
   const signup = async(user) => {
-    if(user.accountType == 'flatee'){
+    if(user.accountType === 'flatee'){
       const userParam = {
         username: user.username,
         password: user.password,
@@ -129,22 +112,18 @@ const useProvideAuth = () => {
         checklist: user.checklist,
         rentUnits: "Per Week",
       };
-      console.log('reachced here');
-      await axiosapi.post('/users/register', {
-        ...userParam
-      }).then(function (response) {
-        if(Config.Logging){
-          console.log(response)
-        }
-
+      
+      // Call API to register new user
+      api.register({userParam})
+      .then(function (response) {
+        console.log(response)
         return response;
     })
     .catch(function (error) {
-        if(Config.Logging)
-            console.log(error)
+        console.log(error)
         return error;
     });
-    } else if(user.accountType == 'flat'){
+    } else if(user.accountType === 'flat'){
       const userParam = {
         username: user.username,
         password: user.password,
@@ -159,13 +138,11 @@ const useProvideAuth = () => {
         leaseDate: user.leaseDate,
         flatRules: user.flatRules,
       };
-      console.log('reachced here');
-      await axiosapi.post('/users/register', {
-        ...userParam
-      }).then(function (response) {
-        if(Config.Logging){
-          console.log(response)
-        }
+
+      // Call API to register new user
+      api.register({userParam})
+      .then(function (response) {
+        console.log(response)
         return response;
     })
     .catch(function (error) {

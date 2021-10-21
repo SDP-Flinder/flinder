@@ -1,5 +1,6 @@
 const db = require('../_helpers/db');
 const Chat = db.Chat;
+const Message = db.Message;
 
 module.exports = {
     getAll,

@@ -1,25 +1,13 @@
-// import react and its hooks
-import React, {
-  useState, useEffect, useMemo,
-} from 'react';
-// import _isEqual function
+import React, {useState, useEffect, useMemo} from 'react';
 import _isEqual from 'lodash/isEqual';
-// import material ui components
 import CloseIcon from '@material-ui/icons/Close';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import IconButton from '@material-ui/core/IconButton';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-// import TinderCards
 import TinderCard from 'react-tinder-card';
-// import base url
-import {
-  instance, matchesForFlatee, unmatch, addListing,
-} from '../../../utils/requests';
-// import styles
+import api from '../../../utils/api';
 import './styles.css';
-// import moment for date formatting
 import * as moment from 'moment';
-// import session user state
 import { useAuth } from '../../App/Authentication';
 import ShowInfo from '../ShowInfo';
 import { Typography } from '@material-ui/core';
@@ -36,9 +24,7 @@ const CardsForFlatee = (props) => {
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const childRefs = useMemo(() => Array(listings.length).fill(0).map((i) => React.createRef()));
-
-  const AuthString = 'Bearer '.concat(jwt);
-  const flateeUser = user.username; // RETRIEVE FLATEE_USERNAME
+  const flateeUser = user;
   let matchparam = {
     flateeUsername: flateeUser,
   };
@@ -47,13 +33,8 @@ const CardsForFlatee = (props) => {
   useEffect(() => {
     async function fetchListings() {
       setLoading(true);
-      await instance.get(matchesForFlatee, {
-        params: matchparam,
-        headers: { Authorization: AuthString },
-      })
-        .then((res) => {
-          setListings(res.data);
-        });
+      // Get Listings from API 
+      setListings(api.getListingById(user.id, jwt));
       setLoading(false);
     }
 
@@ -69,9 +50,11 @@ const CardsForFlatee = (props) => {
       listingID: id,
     };
     if (_isEqual(direction, 'left')) {
-      instance.put(unmatch, matchparam, { headers: { Authorization: AuthString } });
+      // API unmatch
+      api.unmatch(jwt, matchparam);
     } else if (_isEqual(direction, 'right')) {
-      instance.post(addListing, matchparam, { headers: { Authorization: AuthString } });
+      // API add Listing
+      api.addListing(jwt, matchparam);
     }
     alreadyRemoved.push(id);
 

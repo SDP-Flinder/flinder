@@ -9,8 +9,8 @@ router.post('/', authorize(), create);
 router.post('/message', authorize(), message);
 router.get('/', authorize(Role.Admin), getAll);
 router.get('/:id', authorize(), getById);
-router.get('/:matchId', authorize(),  getByMatchId);
-router.delete('/:chatid', authorize(), _delete);
+router.get('/match/:matchId', authorize(),  getByMatchId);
+router.delete('/:id', authorize(), _delete);
 
 module.exports = router;
 

@@ -1,23 +1,12 @@
-// import react and its hooks
-import React, {
-  useState, useEffect, useMemo,
-} from 'react';
-// import _isEqual function
+import React, {useState, useEffect, useMemo} from 'react';
 import _isEqual from 'lodash/isEqual';
-// import material ui components
 import CloseIcon from '@material-ui/icons/Close';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import IconButton from '@material-ui/core/IconButton';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-// import TinderCards
 import TinderCard from 'react-tinder-card';
-// import base url
-import {
-  instance, matchesForListing, unmatch, addFlatee,
-} from '../../../utils/requests';
-// import styles
+import api from '../../../utils/api';
 import './styles.css';
-// import session user state
 import { useAuth } from '../../App/Authentication';
 import ShowInfo from '../ShowInfo';
 import { Typography } from '@material-ui/core';
@@ -30,14 +19,12 @@ const CardsForListing = (props) => {
   const [people, setPeople] = useState([]);
   const [readMore, setReadMore] = useState(null);
   const [showMore, setShowMore] = useState(true);
-
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const childRefs = useMemo(() => Array(people.length).fill(0).map((i) => React.createRef()));
 
-  const AuthString = 'Bearer '.concat(jwt);
   const listingID = props.listingID; // RETRIEVE LISTING ID
-  let matchparam = {
+  let matchparams = {
     listingID: listingID,
   };
 
@@ -45,31 +32,31 @@ const CardsForListing = (props) => {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      await instance.get(matchesForListing, {
-        params: matchparam,
-        headers: { Authorization: AuthString },
+      // Load listings from API
+      api.getListingMatches(user.id, jwt)
+      .then((response) => {
+        console.log(response.data)
+        setPeople(response.data)
+        setLoading(false);
       })
-        .then((res) => {
-          setPeople(res.data);
-        });
-      setLoading(false);
-    }
-
+      .catch(function (error) {
+          console.log(error)
+      })}
     fetchData();
   }, [listingID]);
 
   // swipe function
   const swiped = (direction, person) => {
-    matchparam = {
+    matchparams = {
       flateeUsername: person.username,
       flateeID: person.id,
       listingUsername: user.username,
       listingID: listingID,
     };
     if (_isEqual(direction, 'left')) {
-      instance.put(unmatch, matchparam, { headers: { Authorization: AuthString } });
+      api.unmatch(jwt, matchparams);
     } else if (_isEqual(direction, 'right')) {
-      instance.post(addFlatee, matchparam, { headers: { Authorization: AuthString } });
+      api.addFlatee(jwt, matchparams);
     }
     alreadyRemoved.push(person.username);
 

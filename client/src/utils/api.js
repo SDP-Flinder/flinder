@@ -1,23 +1,128 @@
 /* eslint-disable no-undef */
 import axios from 'axios';
-require('dotenv').config();
+import { Config } from '../config';
 
-const api = axios.create({
-    baseURL : process.env.baseURL || "https://flinder-api-staging.herokuapp.com",
+const unauthaxios = axios.create({
+    baseURL : Config.Local_API_URL,
+    timeout: 1000,
+    headers: { 
+        'Access-Control-Allow-Origin': '*' 
+    }
 });
 
-export const authenticate = payload => api.post(`/users/authenticate`, payload);
-export const register = () => api.get(`/users/register`);
-export const getUserById = (id, payload) => api.get(`/users/${id}`, payload);
-export const deleteArticleById = id => api.delete(`/article/${id}`);
-export const getArticleById = id => api.get(`/article/${id}`);
-
-const apiRoute = {
-    authenticate,
-    register,
-    getUserById,
-    deleteArticleById,
-    getArticleById,
+const authaxios = (jwt) => { 
+    return axios.create({
+        baseURL : Config.Local_API_URL,
+        timeout: 1000,
+        headers: { 
+            'Authorization': `Bearer ${jwt}`, 
+            'Access-Control-Allow-Origin': '*' 
+        }
+    });
 }
 
-export default apiRoute;
+// User Requests
+const authenticate = async ( payload)  => await unauthaxios.post(`/users/authenticate`, payload);
+const register = async ()  => await unauthaxios.post(`/users/register`);
+const logout = async (jwt) => await authaxios(jwt).post(`logout`);
+const getAllUsers = async (jwt)  => await authaxios(jwt).get(`/users/`);
+const getUserById = async (id, jwt)  => await authaxios(jwt).get(`/users/${id}`);
+const getUser = async (jwt)  => await authaxios(jwt).get(`/users/current` );
+const updateUserById = async (id, jwt, payload)  => await authaxios(jwt).put(`/users/${id}`, payload);
+const deleteUserById = async (id, jwt)  => await authaxios(jwt).delete(`/users/${id}`);
+
+// Flat Requests
+const getOwnedFlats = async (jwt)  => await authaxios(jwt).get(`/flats/`);
+const getFlatById = async (id, jwt)  => await authaxios(jwt).get(`/flats/${id}`);
+const getAllFlats = async (jwt)  => await authaxios(jwt).get(`/flats/all`);
+const updateFlatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/flats/${id}`, payload);
+const deleteFlatById = async (id, jwt)  => await authaxios(jwt).delete(`/flats/${id}`);
+
+// Location Requests
+const addLocation = async (jwt, payload)  => await authaxios(jwt).post(`/locations/`, payload)
+const getAllLocations = async (jwt)  => await authaxios(jwt).get(`/locations/`);
+const getLocationById = async (id, jwt)  => await authaxios(jwt).get(`/locations/${id}`);
+const updateLocationById = async (id, jwt, payload)  => await authaxios(jwt).put(`/locations/${id}`, payload);
+const deleteLocationById = async (id, jwt)  => await authaxios(jwt).delete(`/locations/${id}`);
+
+// Match Requests
+const getAllMatches = async (jwt)  => await authaxios(jwt).get(`/matches/`);
+const findFlatee = async (id, jwt)  => await authaxios(jwt).get(`/match/findFlatee/${id}`)
+const getFlateeMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/successMatchesForFlatee/${id}`);
+const getListingMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/successMatchesForListing/${id}`);
+const getPotFlateeMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/potentialMatchesForFlatee/${id}`);
+const getPotListingMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/potentialMatchesForListing/${id}`);
+const addListingToMatch = async (jwt, payload)  => await authaxios(jwt).post(`/matches/addListing`, payload);
+const addFlateeToMatch = async (jwt, payload)  => await authaxios(jwt).post(`/matches/addFlatee/`, payload);
+const unmatch = async (id, jwt, payload)  => await authaxios(jwt).put(`/matches/unmatch/${id}`, payload);
+const deleteMatchById = async (id, jwt)  => await authaxios(jwt).delete(`/matches/${id}`);
+
+// Listing Requests
+const addListing = async (jwt, payload)  => await authaxios(jwt).post(`/listings/`, payload);
+const getFlatListingById = async (flatId, jwt) => await authaxios(jwt).get(`/listings/flat/${flatId}`);
+const getListingById = async (id, jwt)  => await authaxios(jwt).get(`/listings/${id}`);
+const getAllListings = async (jwt)  => await authaxios(jwt).get(`/listings/all`);
+const updateListingById = async (id, jwt, payload)  => await authaxios(jwt).put(`/listings/${id}`, payload);
+const deleteListingById = async (id, jwt)  => await authaxios(jwt).delete(`/listings/${id}`);
+
+// Chat Requests
+const addChat = async (jwt)  => await authaxios(jwt).get(`/chat/`,);
+const addMessageToChat = async (id, jwt)  => await authaxios(jwt).get(`/chat/message/${id}`,);
+const getChatById = async (id, jwt)  => await authaxios(jwt).get(`/chat/${id}`);
+const getChatByMatchId = async (matchId)  => await authaxios(jwt).get( `/chat/match/${matchId}`)
+const getAllChats = async (jwt)  => await authaxios(jwt).get(`/chat/`,);
+const updateChatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/chat/${id}`, payload);
+const deleteChatById = async (id, jwt)  => await authaxios(jwt).delete(`/chat/${id}`);
+
+// Notificaiton Requests
+// const getOwnedFlats = async (jwt)  => await authaxios(jwt).get(`/flats/`,);
+// const getFlatById = async (id, jwt)  => await authaxios(jwt).get(`/flats/${id}`);
+// const getAllFlats = async (jwt)  => await authaxios(jwt).get(`/flats/all`,);
+// const updateFlatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/flats/${id}`, payload);
+// const deleteFlatById = async (id, jwt, payload)  => await authaxios(jwt).delete(`/flats/${id}`, payload);
+
+const api = {
+    authenticate,
+    register,
+    logout,
+    getUserById,
+    getAllUsers,
+    getUser,
+    updateUserById,
+    deleteUserById,
+    getAllMatches,
+    findFlatee, 
+    getFlateeMatches,
+    getListingMatches,
+    getPotFlateeMatches,
+    getPotListingMatches,
+    addListingToMatch,
+    addFlateeToMatch,
+    unmatch,
+    deleteMatchById,
+    getOwnedFlats,
+    getFlatById,
+    getAllFlats,
+    updateFlatById,
+    deleteFlatById,
+    addLocation,
+    getAllLocations,
+    getLocationById,
+    updateLocationById,
+    deleteLocationById,
+    addListing,
+    getFlatListingById,
+    getListingById,
+    getAllListings,
+    updateListingById,
+    deleteListingById,
+    addChat,
+    addMessageToChat,
+    getChatById,
+    getChatByMatchId,
+    getAllChats,
+    updateChatById,
+    deleteChatById,
+}
+
+export default api;
