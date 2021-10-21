@@ -1,8 +1,8 @@
 import React from 'react'
-import PlacesAutocomplete, {
-    geocodeByAddress,
-    getLatLng,
-} from 'react-places-autocomplete';
+// import PlacesAutocomplete, {
+//     geocodeByAddress,
+//     getLatLng,
+// } from 'react-places-autocomplete';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -44,27 +44,27 @@ const Address = (props) => {
         const addressComp = address.split(',');
 
         //Get the user address from Google API
-        geocodeByAddress(address)
-          .then(results => {
-              getLatLng(results[0])
+        // geocodeByAddress(address)
+        //   .then(results => {
+        //       getLatLng(results[0])
 
-              setAddress(results[0].formatted_address);
-              let currentAddress = {
-                  street: '',
-                  suburb: '',
-                  city: '',
-                  country: '',
-              }
+        //       setAddress(results[0].formatted_address);
+        //       let currentAddress = {
+        //           street: '',
+        //           suburb: '',
+        //           city: '',
+        //           country: '',
+        //       }
 
-              assignComponentAddress(results, currentAddress);
+        //       assignComponentAddress(results, currentAddress);
 
-              if(currentAddress.suburb == ''){
-                  currentAddress.suburb = addressComp[1];
-              }
+        //       if(currentAddress.suburb == ''){
+        //           currentAddress.suburb = addressComp[1];
+        //       }
 
-              setComponent(currentAddress);
-            })
-          .catch(error => console.error('Error', error));
+        //       setComponent(currentAddress);
+        //     })
+        //   .catch(error => console.error('Error', error));
     };
 
     //Find any errors from the user iputs
@@ -111,14 +111,14 @@ const Address = (props) => {
             </Typography>
             {!manual && <div>
             <div className = "display-address-search">
-            <PlacesAutocomplete 
+            {/* <PlacesAutocomplete 
             className = "autocomplete-dropdown-container "
             name = "address"
             value={addressName}
             onChange={setAddress}
             onSelect={handleSelect}
-            >
-            {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
+            > */}
+            {/* {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
             <div>
                 <input
                 {...getInputProps({
@@ -150,7 +150,7 @@ const Address = (props) => {
                 </div>
             </div>
             )}
-            </PlacesAutocomplete>
+            </PlacesAutocomplete> */}
             {addressName && 
             <IconButton onClick = {clearAddress}>
                 <ClearIcon/>

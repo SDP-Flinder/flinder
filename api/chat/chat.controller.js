@@ -16,31 +16,31 @@ module.exports = router;
 
 function create(req, res, next) {
     chatService.create(req.body)
-        .then(() => res.json({}))
+        .then((chat) => res.json({chat}))
         .catch(err => next(err));
 }
 
 function message(req, res, next) {
     chatService.message(req.body)
-        .then(() => res.json({}))
+        .then((message) => res.json({message}))
         .catch(err => next(err));
 }
 
 function getAll(req, res, next) {
     chatService.getAll()
-        .then(chats => res.json(chats))
+        .then((chats) => res.json(chats))
         .catch(err => next(err));
 }
 
 function getById(req, res, next) {
     chatService.getById(req.params.id)
-        .then(chat => chat ? res.json(user) : res.sendStatus(404))
+        .then(chat => chat ? res.json(user) : res.json([]))
         .catch(err => next(err));
 }
 
 function getByMatchId(req, res, next) {
-    chatService.getById(req.params.matchId)
-        .then(chat => chat ? res.json(chat) : res.sendStatus(404))
+    chatService.getByMatchId(req.params.matchId)
+        .then(chat => chat ? res.json(chat) : res.json([]))
         .catch(err => next(err));
 }
 

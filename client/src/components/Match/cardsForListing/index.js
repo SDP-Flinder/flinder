@@ -33,7 +33,7 @@ const CardsForListing = (props) => {
     async function fetchData() {
       setLoading(true);
       // Load listings from API
-      api.getListingMatches(user.id, jwt)
+      api.getPotListingMatches(jwt, matchparams)
       .then((response) => {
         console.log(response.data)
         setPeople(response.data)

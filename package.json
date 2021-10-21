@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/SDP-Flinder/flinder#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv-safe": "^8.2.0",
     "helmet": "^4.6.0",
     "npm-run-all": "^4.1.5"

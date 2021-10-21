@@ -1,39 +1,32 @@
 import "../../style/chat.css";
 // import Topbar from "./Topbar";
 import Navigation from "../App/Navigation";
+import BottomNav from "../App/Navigation/BottomNav";
 import Thread from "./Thread";
 import Message from "./Message";
 import ChatOnline from "./ChatOnline";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../App/Authentication";
-import axios from "axios";
+import api from "../../utils/api";
 import { io } from "socket.io-client";
-import { Config } from "../../config";
 
 export default function Chat() {
-  const [threads, setThreads] = useState([]);
-  const [currentChat, setCurrentChat] = useState(null);
+  const [chatThreads, setChatThreads] = useState([]);
+  const [currentChatThread, setCurrentChatThread] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  const [onlineMatchUsers, setOnlineMatchUsers] = useState([]);
   const [matches, setMatches] = useState([]);
   const socket = useRef();
   const { user, jwt } = useAuth();
   const scrollRef = useRef();
 
-  //Helper with axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
-  //
+  // 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
     socket.current.on("getMessage", (data) => {
       setArrivalMessage({
+        chatId: data.chatId,
         sender: data.senderId,
         text: data.text,
         createdAt: Date.now(),
@@ -41,24 +34,23 @@ export default function Chat() {
     });
   }, []);
 
-  //
+  // Process Arriving Messages
   useEffect(() => {
     arrivalMessage && 
-      currentChat?.matchId === arrivalMessage.sender &&
+      (currentChatThread?.id === arrivalMessage.chatId) &&
       setMessages((prev) => [...prev, arrivalMessage]);
-  }, [arrivalMessage, currentChat]);
+  }, [arrivalMessage, currentChatThread]);
 
 
-  //Load and set all the matches from the database
+  //Load and set all matches from the database
   useEffect(() => {
     var listings = [];
-    var tempMatches = [];
     //Fetches all listings for the signed in flat account, to then be used to fetch their matches
     async function getListings() {
-      
-      await instance.get('/listings/flat/'.concat(user.id))
-        .then(res => {
+      api.getFlatListingById(user.id, jwt)
+        .then((res) => {
           listings = res.data
+          console.log(res.data)
         }).catch((error) => {
           console.log('error ' + error);
         });
@@ -69,97 +61,105 @@ export default function Chat() {
 
     //Fetches all successful matches for a given listing
     async function getListingMatches(listing) {
-      await instance.get('/matches/getSuccessMatchesForListing/'.concat(listing.id))
-        .then(res => {
-          tempMatches = res.data
+      api.getListingMatches(listing.id, jwt)
+        .then((res) => {
+          setMatches(res.data);
+          console.log(res.data)
         }).catch((error) => {
           console.log('error ' + error);
         });
-      tempMatches.forEach(match => {
-        setMatches(matches => [...matches, match])
-      })
     }
 
     //Fetches all successful matches for the signed in flatee
     async function getFlateeMatches() {
-      await instance.get('/matches/getSuccessMatchesForFlatee/'.concat(user.id))
-        .then(res => {
-          tempMatches = res.data
+      api.getFlateeMatches(user.id, jwt)
+        .then((res) => {
+          setMatches(res.data)
+          console.log(res.data)
         }).catch((error) => {
           console.log('error ' + error);
         });
-      setMatches(tempMatches);
     }
 
-    //Run the code to fetch the correct data, based on the role of the account
+    // Fetch depending on user role
     if (user && user.role === 'flat') {
       getListings();
       socket.current.emit("addUser", user.id);
-      socket.current.on("getUsers", (users) => {
-        setOnlineMatchUsers(
-          matches.filter((f) => users.some((u) => u.id === f.flateeID))
-        );
-      });
+
+      // For Each match add its corrosponding chat or create one
+      matches.map((match) => (
+        api.getChatByMatchId(match.id, jwt)
+        .then((res) => {
+          setChatThreads([...chatThreads, res.data])
+        })
+      ))
     } else if (user && user.role === 'flatee') {
       getFlateeMatches();
       socket.current.emit("addUser", user.id);
-      socket.current.on("getUsers", (users) => {
-        setOnlineMatchUsers(
-          matches.filter((f) => users.some((u) => u.id === (listings.one((l) => l.id === f.listingID))))
-        );
-      });
-    }
-  }, [user])
 
-  useEffect(() => {
-    const getThreads = async () => {
-      try {
-        const res = await instance.get("/chat/" + user.id);
-        setThreads(res.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    getThreads();
+      // For Each match add its corrosponding chat or create one
+      matches.map((match) => (
+        api.getChatByMatchId(match.id, jwt)
+        .then((res) => {
+          if (res.data[0].length === 0){ // Create Chat
+            api.addChat(jwt, {matchId: match.id, messages: []})
+            .then((resp) => {
+              setChatThreads([...chatThreads, resp.data]);
+            })
+          } else {
+            setChatThreads([...chatThreads, res.data])
+          }
+        })
+      ))
+    }
+
   }, [user]);
 
+  // Load messages for current chat thread
   useEffect(() => {
-    const getMessages = async () => {
-      try {
-        const res = await instance.get("/chat/messages/" + currentChat?.id);
+    if(currentChatThread != null) {
+      api.getMessages(currentChatThread.id, jwt)
+      .then((res) => {
         setMessages(res.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    getMessages();
-  }, [currentChat]);
+      })
+    }
+  }, [currentChatThread]);
 
+  // Send Message
   const handleSubmit = async (e) => {
     e.preventDefault();
     const message = {
+      chatId: currentChatThread.id,
       sender: user.id,
-      text: newMessage,
-      threadId: currentChat.id,
+      text: newMessage
     };
 
-    const receiverId = currentChat.members.find(
-      (member) => member !== user.id
-    );
+    // Find receiver's ID
+    let receiverId;
+    if (currentChatThread && user && user.role === 'flat') {
+      api.getMatchById(currentChatThread.matchId)
+      .then((res) => {
+        receiverId = res.data.flateeId;
+      })
+    } else if (currentChatThread && user && user.role === 'flatee') {
+      api.getMatchById(currentChatThread.matchId)
+      .then((res) => {
+        receiverId = res.data.listingId;
+      })
+    }
 
     socket.current.emit("sendMessage", {
-      senderId: user._id,
+      senderId: user.id,
       receiverId,
       text: newMessage,
     });
 
-    try {
-      const res = await axios.post("/messages", message);
+    // Add Message to DB
+    api.addMessageToChat(currentChatThread.id, jwt, message)
+    .then((res) => {
       setMessages([...messages, res.data]);
       setNewMessage("");
-    } catch (err) {
-      console.log(err);
-    }
+    })
   };
 
   useEffect(() => {
@@ -173,16 +173,17 @@ export default function Chat() {
         <div className="chatMenu">
           <div className="chatMenuWrapper">
             <input placeholder="Search for matches" className="chatMenuInput" />
-            {threads.map((t) => (
-              <div onClick={() => setCurrentChat(t)}>
-                <Thread thread={t} currentUser={user} />
+            {console.log(chatThreads)}
+            {chatThreads.map((t) => (
+              <div onClick={() => setCurrentChatThread(t)}>
+                <Thread thread={t} />
               </div>
             ))}
           </div>
         </div>
         <div className="chatBox">
           <div className="chatBoxWrapper">
-            {currentChat ? (
+            {currentChatThread ? (
               <>
                 <div className="chatBoxTop">
                   {messages.map((m) => (
@@ -210,15 +211,16 @@ export default function Chat() {
             )}
           </div>
         </div>
-        <div className="chatOnline">
+        {/* <div className="chatOnline">
           <div className="chatOnlineWrapper">
             <ChatOnline
-              currentChat={currentChat}
-              setCurrentChat={setCurrentChat}
+              currentChat={currentChatThread}
+              setCurrentChat={setCurrentChatThread}
             />
           </div>
-        </div>
+        </div> */}
       </div>
+      <BottomNav />
     </>
   );
 }

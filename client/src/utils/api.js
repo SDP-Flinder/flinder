@@ -6,7 +6,7 @@ const unauthaxios = axios.create({
     baseURL : Config.Local_API_URL,
     timeout: 1000,
     headers: { 
-        'Access-Control-Allow-Origin': '*' 
+        'Content-Type': 'application/json'
     }
 });
 
@@ -16,7 +16,19 @@ const authaxios = (jwt) => {
         timeout: 1000,
         headers: { 
             'Authorization': `Bearer ${jwt}`, 
-            'Access-Control-Allow-Origin': '*' 
+            'Content-Type': 'application/json'
+        }
+    });
+}
+
+const authparamaxios = (jwt, param) => { 
+    return axios.create({
+        baseURL : Config.Local_API_URL,
+        timeout: 1000,
+        params: param,
+        headers: { 
+            'Authorization': `Bearer ${jwt}`, 
+            'Content-Type': 'application/json'
         }
     });
 }
@@ -47,12 +59,13 @@ const deleteLocationById = async (id, jwt)  => await authaxios(jwt).delete(`/loc
 
 // Match Requests
 const getAllMatches = async (jwt)  => await authaxios(jwt).get(`/matches/`);
+const getMatchById = async (id, jwt)  => await authaxios(jwt).get(`/matches/${id}`);
 const findFlatee = async (id, jwt)  => await authaxios(jwt).get(`/match/findFlatee/${id}`)
 const getFlateeMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/successMatchesForFlatee/${id}`);
 const getListingMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/successMatchesForListing/${id}`);
-const getPotFlateeMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/potentialMatchesForFlatee/${id}`);
-const getPotListingMatches = async (id, jwt)  => await authaxios(jwt).get(`/matches/potentialMatchesForListing/${id}`);
-const addListingToMatch = async (jwt, payload)  => await authaxios(jwt).post(`/matches/addListing`, payload);
+const getPotFlateeMatches = async (jwt, payload)  => await authparamaxios(jwt, payload).get(`/matches/potentialMatchesForFlatee/`);
+const getPotListingMatches = async (jwt, payload)  => await authparamaxios(jwt, payload).get(`/matches/potentialMatchesForListing/`);
+const addListingToMatch = async (jwt, payload)  => await authaxios(jwt).post(`/matches/addListing/`, payload);
 const addFlateeToMatch = async (jwt, payload)  => await authaxios(jwt).post(`/matches/addFlatee/`, payload);
 const unmatch = async (id, jwt, payload)  => await authaxios(jwt).put(`/matches/unmatch/${id}`, payload);
 const deleteMatchById = async (id, jwt)  => await authaxios(jwt).delete(`/matches/${id}`);
@@ -66,11 +79,11 @@ const updateListingById = async (id, jwt, payload)  => await authaxios(jwt).put(
 const deleteListingById = async (id, jwt)  => await authaxios(jwt).delete(`/listings/${id}`);
 
 // Chat Requests
-const addChat = async (jwt)  => await authaxios(jwt).get(`/chat/`,);
-const addMessageToChat = async (id, jwt)  => await authaxios(jwt).get(`/chat/message/${id}`,);
-const getChatById = async (id, jwt)  => await authaxios(jwt).get(`/chat/${id}`);
-const getChatByMatchId = async (matchId)  => await authaxios(jwt).get( `/chat/match/${matchId}`)
-const getAllChats = async (jwt)  => await authaxios(jwt).get(`/chat/`,);
+const addChat = async (jwt, payload)  => await authaxios(jwt).post(`/chat/`, payload);
+const addMessageToChat = async (id, jwt, payload)  => await authaxios(jwt).post(`/chat/message/${id}`, payload);
+const getChatById = async (id, jwt)  => await authaxios(jwt).get( `/chat/${id}`);
+const getChatByMatchId = async (matchId, jwt)  => await authaxios(jwt).get( `/chat/match/${matchId}`);
+const getAllChats = async (jwt)  => await authaxios(jwt).get(`/chat/`);
 const updateChatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/chat/${id}`, payload);
 const deleteChatById = async (id, jwt)  => await authaxios(jwt).delete(`/chat/${id}`);
 
@@ -91,6 +104,7 @@ const api = {
     updateUserById,
     deleteUserById,
     getAllMatches,
+    getMatchById,
     findFlatee, 
     getFlateeMatches,
     getListingMatches,

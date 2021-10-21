@@ -1,7 +1,6 @@
-import axios from "axios";
+import api from "../../utils/api";
 import { useEffect, useState } from "react";
 import "../../style/chatOnline.css";
-import { Config } from "../../config"
 import { useAuth } from "../App/Authentication";
 
 export default function ChatOnline({ currentChat, setCurrentChat }) {
@@ -10,20 +9,13 @@ export default function ChatOnline({ currentChat, setCurrentChat }) {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const { jwt, user } = useAuth();
 
-  //Helper for ease of use when making axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
 //Load and set all the states with data from the database
 useEffect(() => {
   var tempMatches = [];
   //Fetches all listings for the signed in flat account, to then be used to fetch their matches
   async function getListings() {
     var listings = [];
-    await instance.get('/listings/flat/'.concat(user.id))
+    api.getFlatListingById(user.id, jwt)
       .then(res => {
         listings = res.data
       }).catch((error) => {
@@ -36,7 +28,7 @@ useEffect(() => {
 
   //Fetches all successful matches for a given listing
   async function getListingMatches(listing) {
-    await instance.get('/matches/getSuccessMatchesForListing/'.concat(listing.id))
+    api.getListingMatches(listing.id, jwt)
       .then(res => {
         tempMatches = res.data
       }).catch((error) => {
@@ -49,7 +41,7 @@ useEffect(() => {
 
   //Fetches all successful matches for the signed in flatee
   async function getFlateeMatches() {
-    await instance.get('/matches/getSuccessMatchesForFlatee/'.concat(user.id))
+    api.getFlateeMatches(user.id, jwt)
       .then(res => {
         tempMatches = res.data
       }).catch((error) => {
@@ -80,15 +72,11 @@ useEffect(() => {
   //   setOnlineFriends(matchs.filter((f) => onlineMatchUsers.includes(f._id)));
   // }, [matchs, onlineMatchUsers]);
 
-  const handleClick = async (user) => {
-    try {
-      const res = await instance.get(
-        `/chat/${currentChat.id}`
-      );
-      setCurrentChat(res.data);
-    } catch (err) {
-      console.log(err);
-    }
+  const handleClick = async (matchId) => {
+      api.getChatByMatchId(matchId, jwt)
+      .then((res) => {
+        setCurrentChat(res.data);
+      })
   };
 
   return (

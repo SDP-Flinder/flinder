@@ -272,6 +272,10 @@ async function findFlatee(id) {
   return await users.findOne({ username: match.flateeUsername });
 }
 
+async function getById(id) {
+    return await matchList.findById(id);
+}
+
 async function _delete(id) {
     await matchList.findByIdAndRemove(id);
 }

@@ -34,7 +34,9 @@ const CardsForFlatee = (props) => {
     async function fetchListings() {
       setLoading(true);
       // Get Listings from API 
-      setListings(api.getListingById(user.id, jwt));
+      api.getPotFlateeMatches(jwt, matchparam)
+      .then((res) => setListings(res.data))
+      .catch((err) => console.log(err))
       setLoading(false);
     }
 
