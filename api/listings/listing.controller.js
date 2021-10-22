@@ -27,7 +27,7 @@ function getAll(req, res, next) {
 
 function getOwned(req, res, next) {
     listingService.getOwned(req.params.id)
-        .then(listing => listing ? res.json(listing) : res.sendStatus(404))
+        .then(listing => listing ? res.json(listing) : res.sendStatus(404).json({message: 'listing-not-found'}))
         .catch(err => next(err));
 }
 

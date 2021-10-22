@@ -7,10 +7,9 @@ import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import NumberFormat from 'react-number-format';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useAuth } from '../App/Authentication';
 import { makeStyles } from '@material-ui/core/styles';
-import { Config } from '../../config';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
@@ -39,10 +38,8 @@ function CreateListing(props) {
   const classes = useStyles();
   const { user, jwt } = useAuth();
   const currentDate = new Date();
-
   const [error, setError] = useState({});
   const [isInvalid, setInvalid] = useState({});
-
   const [description, setDescription] = useState("");
   const [roomAvailable, setRoomAvailable] = useState(currentDate);
   const [rent, setRent] = useState(0);
@@ -51,12 +48,6 @@ function CreateListing(props) {
   const [water, setWater] = useState(false);
   const [internet, setInternet] = useState(false);
 
-  //Helper axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
 
   //Method to check if an error is detected on form submit - rent can't be $0
   const findError = () => {
@@ -122,7 +113,7 @@ function CreateListing(props) {
       },
       active: true
     };
-    instance.post('/listings/add/', bodyParameters);
+    api.addListing(jwt, bodyParameters);
   }
 
   return (

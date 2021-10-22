@@ -443,7 +443,7 @@ export default function FilterDrawerForFlatee() {
 
   // update preferences in backend when clicked on Submit button
   const submit = () => {
-    if ((max - min) >= 0 && (min != '') && (max != '')){
+    if ((max - min) >= 0 && (min !== '') && (max !== '')){
       const URL = `${Config.Local_API_URL}/users/`.concat(user.id);
 
       const config = {
@@ -456,22 +456,22 @@ export default function FilterDrawerForFlatee() {
       }
 
       //Set the preferred suburb to ALL if the user leaves this field blank
-      if (city != '')
+      if (city !== '')
       {
-        if(suburb.length == 0)
+        if(suburb.length === 0)
         {
-          if(regionbDisplay.length != 0)
+          if(regionbDisplay.length !== 0)
           {
             for(let k =0; k<repo.length;k++)
             {
-              if(repo[k].region.name == region)
+              if(repo[k].region.name === region)
               {
                 preferredArea.suburb.push(...repo[k].region.suburb);
               }
             }
           } 
   
-          if(region == '')
+          if(region === '')
           {
             for(let k =0; k<repo.length;k++)
             {
@@ -483,7 +483,7 @@ export default function FilterDrawerForFlatee() {
           }
         }
       }
-      else if (city == '')
+      else if (city === '')
       {
         preferredArea = user.preferredArea;
       }

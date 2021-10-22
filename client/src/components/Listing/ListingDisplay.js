@@ -6,7 +6,7 @@ import Paper from "@material-ui/core/Paper";
 import * as moment from 'moment';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
-import axios from 'axios';
+import api from '../../utils/api';
 import { Config } from '../../config';
 import { useAuth } from '../App/Authentication';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -92,16 +92,9 @@ function ListingDisplay(props) {
   const [viewMatch, setViewMatch] = useState(true);
   const [open, setOpen] = useState(false);
 
-  //Helper axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
   //Delete the current listing from the database
   const deleteListing = async () => {
-    await instance.delete('/listings/'.concat(listing.id));
+    await api.deleteListingById(listing.id, jwt);
     props.history.push('/');
   }
 
@@ -114,7 +107,7 @@ function ListingDisplay(props) {
 
   //Update the active status of the current listing in the database
   const updateActive = async (activeStatus) => {
-    await instance.put('/listings/'.concat(listing.id), { active: activeStatus });
+    await api.updateListingById(listing.id, jwt, { active: activeStatus });
   }
 
   //Check if the user viewing is the owner of the listing before rendering the update/delete buttons
@@ -158,8 +151,10 @@ function ListingDisplay(props) {
   //Methods to ensure current displayed information is accurate
   useEffect(() => {
     async function getListing() {
-      const listing = await instance.get('/listings/'.concat(id));
-      setListing(listing.data);
+      await api.getListingById(id, jwt)
+      .then((res) => {
+        setListing(res.data);
+      })
     }
     getListing();
   }, [id])
@@ -185,8 +180,10 @@ function ListingDisplay(props) {
 
   useEffect(() => {
     async function getListing() {
-      const listing = await instance.get('/listings/'.concat(id));
-      setListing(listing.data);
+      await api.getListingById(id, jwt)
+      .then((res) => {
+        setListing(res.data);
+      })
     }
     getListing();
   }, [open])

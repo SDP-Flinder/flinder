@@ -72,9 +72,10 @@ const deleteMatchById = async (id, jwt)  => await authaxios(jwt).delete(`/matche
 
 // Listing Requests
 const addListing = async (jwt, payload)  => await authaxios(jwt).post(`/listings/`, payload);
-const getFlatListingById = async (flatId, jwt) => await authaxios(jwt).get(`/listings/flat/${flatId}`);
+const getListingByFlatId = async (flatId, jwt) => await authaxios(jwt).get(`/listings/flat/${flatId}`);
 const getListingById = async (id, jwt)  => await authaxios(jwt).get(`/listings/${id}`);
 const getAllListings = async (jwt)  => await authaxios(jwt).get(`/listings/all`);
+const getFlatAccount = async (id, jwt) => await authaxios(jwt).get(`/flatAccount/${id}`);
 const updateListingById = async (id, jwt, payload)  => await authaxios(jwt).put(`/listings/${id}`, payload);
 const deleteListingById = async (id, jwt)  => await authaxios(jwt).delete(`/listings/${id}`);
 
@@ -125,9 +126,10 @@ const api = {
     updateLocationById,
     deleteLocationById,
     addListing,
-    getFlatListingById,
+    getListingByFlatId,
     getListingById,
     getAllListings,
+    getFlatAccount,
     updateListingById,
     deleteListingById,
     addChat,

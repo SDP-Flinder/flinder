@@ -10,10 +10,9 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import NumberFormat from 'react-number-format';
-import axios from 'axios';
+import api from'../../utils/api';
 import { useAuth } from '../App/Authentication';
 import { makeStyles } from '@material-ui/core/styles';
-import { Config } from '../../config';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
@@ -57,13 +56,6 @@ function UpdateListing(props) {
     power: false, water: false, internet: false
   });
   const [active, setActive] = useState(true);
-
-  //Helper axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
 
   //Method to check if an error is detected on form submit - rent can't be $0
   const findError = () => {
@@ -111,7 +103,7 @@ function UpdateListing(props) {
       utilities: utilities,
       active: active
     };
-    instance.put('/listings/'.concat(id), bodyParameters);
+    api.updateListingById((id),jwt, bodyParameters);
   }
 
   //Event handler for the active switch - the owner accoount is able to toggle whether the listing is 
@@ -135,11 +127,10 @@ function UpdateListing(props) {
 
   //Load the listing passed by the previous page from the DB
   useEffect(() => {
-    async function getListing() {
-      const listing = await instance.get('/listings/'.concat(id));
-      setListing(listing.data);
-    }
-    getListing();
+    api.getListingById(id, jwt)
+    .then((res) => {
+      setListing(res.data);
+    })
   }, [user, id])
 
   //Populate the form with the passed in listings details

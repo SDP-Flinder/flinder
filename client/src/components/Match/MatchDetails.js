@@ -7,7 +7,7 @@ import Grid from "@material-ui/core/Grid";
 import Navigation from "../App/Navigation";
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BottomNav from '../App/Navigation/BottomNav';
-import axios from 'axios';
+import api from '../../utils/api';
 import moment from "moment";
 import { Config } from '../../config';
 
@@ -72,25 +72,18 @@ export default function MatchDetails() {
   const [matchedUser, setMatchedUser] = useState([]);
   const [listing, setListing] = useState([]);
 
-  //For ease of use for axios calls
-  const instance = axios.create({
-    baseURL: Config.Local_API_URL,
-    timeout: 1000,
-    headers: { Authorization: `Bearer ${jwt}` }
-  })
-
   //Load up all the necessary details for displaying the match, based on the role of the current user
   useEffect(() => {
     async function getMatch() {
       let tempMatch = [];
       if (user.role === 'flat') {
-        await instance.get('/matches/findFlatee/'.concat(match.id))
+        api.findFlatee(match.id, jwt)
           .then(res => {
             tempMatch = res.data
           });
       }
       else if (user.role === 'flatee' && listing.length !== 0) {
-        await instance.get('/users/'.concat(listing.flat_id))
+        api.getUserById(listing.flat_id, jwt)
           .then(res => {
             tempMatch = res.data
           });
@@ -101,7 +94,7 @@ export default function MatchDetails() {
     //Get the listing for the match to be used in 
     async function getListing() {
       let tempListing = [];
-      await instance.get('/listings/'.concat(match.listingID))
+      api.getListingById(match.listingID, jwt)
         .then(res => {
           tempListing = res.data
         });

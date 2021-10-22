@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Divider, List, ListItem, Toolbar, Drawer, IconButton, ListItemText } from "@mui/material";
 import { useAuth } from "../App/Authentication";
-import axios from "axios";
+import api from '../../../utils/api';
 import { Config } from "../../config";
 import { ListSubheader } from "@material-ui/core";
 import PersonIcon from '@mui/icons-material/Person';
@@ -16,13 +16,6 @@ export default function SideBar(props) {
         listingID: "listingID",
 
     }]
-
-    //Helper for ease of use when making axios calls
-    const instance = axios.create({
-        baseURL: Config.Local_API_URL,
-        timeout: 1000,
-        headers: { Authorization: `Bearer ${jwt}` }
-    })
 
     //Render a set of buttons for each match loaded into the global state, depending on the role of the signed in account
   const renderListItems = () => {
@@ -62,7 +55,7 @@ export default function SideBar(props) {
         //Fetches all listings for the signed in flat account, to then be used to fetch their matches
         async function getListings() {
             var listings = [];
-            await instance.get('/listings/flat/'.concat(user.id))
+            await api.getFlatListingById(user.id, jwt)
                 .then(res => {
                 listings = res.data
                 });
@@ -74,7 +67,7 @@ export default function SideBar(props) {
 
     //Fetches all successful matches for a given listing
     async function getListingMatches(listing) {
-      await instance.get('/matches/getSuccessMatchesForListing/'.concat(listing.id))
+      await api.getListingMatches(listing.id, jwt)
         .then(res => {
           tempMatches = res.data
         });
@@ -87,7 +80,7 @@ export default function SideBar(props) {
 
     //Fetches all successful matches for the signed in flatee
     async function getFlateeMatches() {
-      await instance.get('/matches/getSuccessMatchesForFlatee/'.concat(user.id))
+      await api.getFlateeMatches(user.id, jwt)
         .then(res => {
           tempMatches = res.data
         });

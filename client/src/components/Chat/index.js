@@ -6,7 +6,7 @@ import Thread from "./Thread";
 import Message from "./Message";
 import ChatOnline from "./ChatOnline";
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../App/Authentication";
+import { Role, useAuth } from "../App/Authentication";
 import api from "../../utils/api";
 import { io } from "socket.io-client";
 
@@ -17,6 +17,7 @@ export default function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [listings, setListings] = useState([]);
   const socket = useRef();
   const { user, jwt } = useAuth();
   const scrollRef = useRef();
@@ -42,43 +43,57 @@ export default function Chat() {
   }, [arrivalMessage, currentChatThread]);
 
 
-  //Load and set all matches from the database
+  // Load and set all matches from the database
   useEffect(() => {
-    var listings = [];
-    //Fetches all listings for the signed in flat account, to then be used to fetch their matches
+    // Fetches all listings for the signed in flat account, 
+    // to then be used to fetch their matches
     async function getListings() {
-      api.getFlatListingById(user.id, jwt)
+      console.log('getListingByFlatId: ' + user.id + ' jwt: ' + jwt);
+      if (user && user !== null) {
+        await api.getListingByFlatId(user.id, jwt)
         .then((res) => {
-          listings = res.data
-          console.log(res.data)
+          // For each 
+          const listings = res.data
+          listings.forEach((listing) => (
+            setListings([...listings, listing])
+          ))
         }).catch((error) => {
           console.log('error ' + error);
         });
-      listings.forEach(listing => {
-        getListingMatches(listing);
-      })
+
+        // Calls GetListingMatches below to set matches for each listing
+        listings.forEach(listing => {
+          getListingMatches(listing);
+        })
+      }
     }
 
-    //Fetches all successful matches for a given listing
+    // Fetches all successful matches for a given listing
     async function getListingMatches(listing) {
-      api.getListingMatches(listing.id, jwt)
+      console.log('getListingMatches: ' + listing.id);
+      if (listing && listing !== null) {
+        await api.getListingMatches(listing.id, jwt)
         .then((res) => {
-          setMatches(res.data);
-          console.log(res.data)
+          setMatches([...matches, res.data]);
+          console.log(matches)
         }).catch((error) => {
           console.log('error ' + error);
-        });
+        })
+      }
     }
 
-    //Fetches all successful matches for the signed in flatee
+    // Fetches all successful matches for the signed in flatee
     async function getFlateeMatches() {
-      api.getFlateeMatches(user.id, jwt)
+      console.log('getFlateeMatches: ' + user.id);
+      if (user && user !== null) {
+        await api.getFlateeMatches(user.id, jwt)
         .then((res) => {
-          setMatches(res.data)
-          console.log(res.data)
+          setMatches([...matches, res.data])
+          console.log(matches)
         }).catch((error) => {
           console.log('error ' + error);
         });
+      }
     }
 
     // Fetch depending on user role
@@ -87,9 +102,10 @@ export default function Chat() {
       socket.current.emit("addUser", user.id);
 
       // For Each match add its corrosponding chat or create one
-      matches.map((match) => (
-        api.getChatByMatchId(match.id, jwt)
+      matches.map(async(match) =>  (
+        await api.getChatByMatchId(match.id, jwt)
         .then((res) => {
+          console.log(res.data);
           setChatThreads([...chatThreads, res.data])
         })
       ))
@@ -98,9 +114,10 @@ export default function Chat() {
       socket.current.emit("addUser", user.id);
 
       // For Each match add its corrosponding chat or create one
-      matches.map((match) => (
-        api.getChatByMatchId(match.id, jwt)
+      matches.map(async (match) => (
+        await api.getChatByMatchId(match.id, jwt)
         .then((res) => {
+          console.log(res.data);
           if (res.data[0].length === 0){ // Create Chat
             api.addChat(jwt, {matchId: match.id, messages: []})
             .then((resp) => {
@@ -136,15 +153,14 @@ export default function Chat() {
 
     // Find receiver's ID
     let receiverId;
-    if (currentChatThread && user && user.role === 'flat') {
+    if (currentChatThread && user !== null) {
       api.getMatchById(currentChatThread.matchId)
       .then((res) => {
-        receiverId = res.data.flateeId;
-      })
-    } else if (currentChatThread && user && user.role === 'flatee') {
-      api.getMatchById(currentChatThread.matchId)
-      .then((res) => {
-        receiverId = res.data.listingId;
+        if(user.role === Role.Flat) {
+          receiverId = res.data.listingId
+        } else if(user.role === Role.Flatee){
+          receiverId = res.data.flateeId;
+        }
       })
     }
 
@@ -168,7 +184,7 @@ export default function Chat() {
 
   return (
     <>
-      <Navigation />
+      {/* <Navigation /> */}
       <div className="chat">
         <div className="chatMenu">
           <div className="chatMenuWrapper">
@@ -220,7 +236,7 @@ export default function Chat() {
           </div>
         </div> */}
       </div>
-      <BottomNav />
+      {/* <BottomNav /> */}
     </>
   );
 }
