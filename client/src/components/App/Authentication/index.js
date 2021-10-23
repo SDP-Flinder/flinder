@@ -3,19 +3,6 @@ import jwtDecode from 'jwt-decode';
 import { Config } from '../../../config';
 import api from "../../../utils/api";
 
-// JWT Storage in ether session or local (remember me)
-const getJWT = () => {
-  if(sessionStorage.getItem('jwt')) {
-    return sessionStorage.getItem('jwt');
-  } else {
-    if(localStorage.getItem('jwt')) {
-      return localStorage.getItem('jwt');
-      } else {
-      return null;
-    }
-  }
-}
-
 // Create Authentication Context
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -27,29 +14,36 @@ export const ProvideAuth = ({ children }) => {
 };
 
 const useProvideAuth = () => {
-  const jwt = getJWT();
+  const [jwt, setJWT] = useState(null);
   const [user, setUser] = useState(null);
   const isAuthed = (user && jwt && jwtDecode(jwt).exp * 1000 > Date.now()) ? true : false;
 
   // Get current user data, if they are logged in
   useEffect(() => {
+    if(sessionStorage.getItem('jwt')) {
+      setJWT(sessionStorage.getItem('jwt'));
+    } else if(localStorage.getItem('jwt')) {
+      setJWT(localStorage.getItem('jwt'));
+    }
+
     // If JWT is stored then load user from api
-    if (jwt != null) {
-      api.getUser(jwt)
+    if (jwt && jwt !== null) {
+      api.getJWTUser(jwt)
       .then((response) => {
         setUser(response.data)
       })
       .catch(function (error) {
           console.log(error)
           setUser(null)
-      })}
+      })
+    }
     // console.log(`User object: ${user}`);
     // console.log(`Is authed: ${isAuthed}`);
 
     return () => {
       setUser(null);
     };
-  }, []);
+  }, [jwt]);
 
   // Handle signing in
   const signin = async (username, password, remember) => {
@@ -80,7 +74,7 @@ const useProvideAuth = () => {
   const signout = () => {
     console.log('Sign Out Called:');
     console.log(user);
-    console.log(getJWT());
+    console.log(jwt);
 
     // Call API
     return api.logout(jwt)

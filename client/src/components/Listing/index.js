@@ -108,9 +108,12 @@ function ListingList(props) {
 
   //Fetch all listings owned by the current user on page load
   useEffect(() => {
-    api.getFlatListingById(user.id, jwt)
+    api.getListingById(user.id, jwt)
     .then((res) => {
       setListings(res.data);
+    })
+    .catch((err) => {
+      console.log(`${user.id} doesn't have any listings`);
     })
     
   }, [user, jwt, open])

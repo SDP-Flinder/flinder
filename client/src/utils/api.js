@@ -39,7 +39,7 @@ const register = async ()  => await unauthaxios.post(`/users/register`);
 const logout = async (jwt) => await authaxios(jwt).post(`logout`);
 const getAllUsers = async (jwt)  => await authaxios(jwt).get(`/users/`);
 const getUserById = async (id, jwt)  => await authaxios(jwt).get(`/users/${id}`);
-const getUser = async (jwt)  => await authaxios(jwt).get(`/users/current` );
+const getJWTUser = async (jwt)  => await authaxios(jwt).get(`/users/current` );
 const updateUserById = async (id, jwt, payload)  => await authaxios(jwt).put(`/users/${id}`, payload);
 const deleteUserById = async (id, jwt)  => await authaxios(jwt).delete(`/users/${id}`);
 
@@ -89,11 +89,10 @@ const updateChatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/c
 const deleteChatById = async (id, jwt)  => await authaxios(jwt).delete(`/chat/${id}`);
 
 // Notificaiton Requests
-// const getOwnedFlats = async (jwt)  => await authaxios(jwt).get(`/flats/`,);
-// const getFlatById = async (id, jwt)  => await authaxios(jwt).get(`/flats/${id}`);
-// const getAllFlats = async (jwt)  => await authaxios(jwt).get(`/flats/all`,);
-// const updateFlatById = async (id, jwt, payload)  => await authaxios(jwt).put(`/flats/${id}`, payload);
-// const deleteFlatById = async (id, jwt, payload)  => await authaxios(jwt).delete(`/flats/${id}`, payload);
+const getUsersNotifications = async (jwt)  => await authaxios(jwt).get(`/notifications/`);
+const readNotfication = async (id, jwt)  => await authaxios(jwt).put(`/notifications/read/${id}`);
+const addNotification = async (jwt, payload)  => await authaxios(jwt).get(`/notifications/`, payload);
+const deleteNotificationById = async (id, jwt)  => await authaxios(jwt).delete(`/notification/${id}`);
 
 const api = {
     authenticate,
@@ -101,7 +100,7 @@ const api = {
     logout,
     getUserById,
     getAllUsers,
-    getUser,
+    getJWTUser,
     updateUserById,
     deleteUserById,
     getAllMatches,
@@ -139,6 +138,10 @@ const api = {
     getAllChats,
     updateChatById,
     deleteChatById,
+    getUsersNotifications,
+    readNotfication,
+    addNotification,
+    deleteNotificationById
 }
 
 export default api;
