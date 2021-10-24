@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import api from '../../utils/api';
-import { useAuth } from '../App/Authentication';
+import { Role, useAuth } from '../App/Authentication';
 import Link from '@material-ui/core/Link';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -108,13 +108,23 @@ function ListingList(props) {
 
   //Fetch all listings owned by the current user on page load
   useEffect(() => {
-    api.getListingById(user.id, jwt)
-    .then((res) => {
-      setListings(res.data);
-    })
-    .catch((err) => {
-      console.log(`${user.id} doesn't have any listings`);
-    })
+    if(user && user.role === Role.Flat) {
+      api.getListingByFlatId(user.id, jwt)
+      .then((res) => {
+        setListings(res.data);
+      })
+      .catch((err) => {
+        console.log(`${user.id} doesn't have any listings`);
+      })
+    } else if (user && user.role === Role.Flatee) {
+      api.getListingById(user.id, jwt)
+      .then((res) => {
+        setListings(res.data);
+      })
+      .catch((err) => {
+        console.log(`${user.id} doesn't have any listings`);
+      })
+    }
     
   }, [user, jwt, open])
 

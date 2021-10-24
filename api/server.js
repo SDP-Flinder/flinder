@@ -42,6 +42,7 @@ router.use('/matches', require('./matches/match.controller'));
 router.use('/listings', require('./listings/listing.controller'));
 router.use('/locations', require('./locations/location.controller'));
 router.use('/chat', require('./chat/chat.controller'));
+router.use('/notifications', require('./notification/notification.controller'));
 router.get('/logout', authorize(), logout);
 
 app.use('/api/', router);

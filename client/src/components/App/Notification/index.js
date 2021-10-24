@@ -15,8 +15,9 @@ function Noti() {
       await api.getUsersNotifications(jwt)
         .then(res => {
           tempNotis = res.data
-          
-        });
+        })
+        .catch(err => 
+          console.log(err))
         
         tempNotis.forEach(notification => {
           setListItems(listItems => [...listItems, {

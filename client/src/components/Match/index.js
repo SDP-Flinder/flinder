@@ -129,7 +129,7 @@ export default function Match(props) {
     //Fetches all listings for the signed in flat account, to then be used to fetch their matches
     async function getListings() {
       var listings = [];
-      api.getFlatListingById(user.id, jwt)
+      api.getListingByFlatId(user.id, jwt)
         .then(res => {
           listings = res.data
         }).catch((error) => {

@@ -55,7 +55,7 @@ export default function SideBar(props) {
         //Fetches all listings for the signed in flat account, to then be used to fetch their matches
         async function getListings() {
             var listings = [];
-            await api.getFlatListingById(user.id, jwt)
+            await api.getListingByFlatId(user.id, jwt)
                 .then(res => {
                 listings = res.data
                 });
