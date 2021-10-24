@@ -5,10 +5,25 @@ import BottomNav from "../App/Navigation/BottomNav";
 import Thread from "./Thread";
 import Message from "./Message";
 import ChatOnline from "./ChatOnline";
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import AppBar from '@mui/material/AppBar';
+import CssBaseline from '@mui/material/CssBaseline';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import Typography from '@mui/material/Typography';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Avatar from '@mui/material/Avatar';
+import Stack from '@mui/material/Stack';
+import { deepOrange, deepPurple } from '@mui/material/colors';
 import { useEffect, useRef, useState } from "react";
 import { Role, useAuth } from "../App/Authentication";
 import api from "../../utils/api";
 import { io } from "socket.io-client";
+
+const drawerWidth = 240;
 
 export default function Chat() {
   const [chatThreads, setChatThreads] = useState([]);
@@ -183,60 +198,89 @@ export default function Chat() {
   }, [messages]);
 
   return (
-    <>
-      {/* <Navigation /> */}
-      <div className="chat">
-        <div className="chatMenu">
-          <div className="chatMenuWrapper">
-            <input placeholder="Search for matches" className="chatMenuInput" />
-            {console.log(chatThreads)}
-            {chatThreads.map((t) => (
-              <div onClick={() => setCurrentChatThread(t)}>
-                <Thread thread={t} />
-              </div>
+    <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Toolbar>
+          <Typography variant="h6" noWrap component="div">
+            Clipped drawer
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+        }}
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto' }}>
+          <List>
+            {matches.map((t) => (
+              <ListItem button key={t.id}>
+                  <Avatar sx={{ bgcolor: deepOrange[500]} }>t.id</Avatar>
+                <ListItemText primary={t.id} />
+              </ListItem>
             ))}
-          </div>
-        </div>
-        <div className="chatBox">
-          <div className="chatBoxWrapper">
-            {currentChatThread ? (
-              <>
-                <div className="chatBoxTop">
-                  {messages.map((m) => (
-                    <div ref={scrollRef}>
-                      <Message message={m} own={m.sender === user._id} />
-                    </div>
-                  ))}
-                </div>
-                <div className="chatBoxBottom">
-                  <textarea
-                    className="chatMessageInput"
-                    placeholder="write something..."
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    value={newMessage}
-                  ></textarea>
-                  <button className="chatSubmitButton" onClick={handleSubmit}>
-                    Send
-                  </button>
-                </div>
-              </>
-            ) : (
-              <span className="noConversationText">
-                Open a match to start a chat.
-              </span>
-            )}
-          </div>
-        </div>
-        {/* <div className="chatOnline">
-          <div className="chatOnlineWrapper">
-            <ChatOnline
-              currentChat={currentChatThread}
-              setCurrentChat={setCurrentChatThread}
-            />
-          </div>
-        </div> */}
-      </div>
-      {/* <BottomNav /> */}
-    </>
+          </List>
+        </Box>
+      </Drawer>
+    </Box>
+      // {/* <Navigation /> */}
+      // <div className="chat">
+      //   <div className="chatMenu">
+      //     <div className="chatMenuWrapper">
+      //       <input placeholder="Search for matches" className="chatMenuInput" />
+      //       {console.log(chatThreads)}
+      //       {chatThreads.map((t) => (
+      //         <div onClick={() => setCurrentChatThread(t)}>
+      //           <Thread thread={t} />
+      //         </div>
+      //       ))}
+      //     </div>
+      //   </div>
+      //   <div className="chatBox">
+      //     <div className="chatBoxWrapper">
+      //       {currentChatThread ? (
+      //         <>
+      //           <div className="chatBoxTop">
+      //             {messages.map((m) => (
+      //               <div ref={scrollRef}>
+      //                 <Message message={m} own={m.sender === user._id} />
+      //               </div>
+      //             ))}
+      //           </div>
+      //           <div className="chatBoxBottom">
+      //             <textarea
+      //               className="chatMessageInput"
+      //               placeholder="write something..."
+      //               onChange={(e) => setNewMessage(e.target.value)}
+      //               value={newMessage}
+      //             ></textarea>
+      //             <button className="chatSubmitButton" onClick={handleSubmit}>
+      //               Send
+      //             </button>
+      //           </div>
+      //         </>
+      //       ) : (
+      //         <span className="noConversationText">
+      //           Open a match to start a chat.
+      //         </span>
+      //       )}
+      //     </div>
+      //   </div>
+        // {/* <div className="chatOnline">
+        //   <div className="chatOnlineWrapper">
+        //     <ChatOnline
+        //       currentChat={currentChatThread}
+        //       setCurrentChat={setCurrentChatThread}
+        //     />
+        //   </div>
+        // </div> */}
+      // </div>
+      // {/* <BottomNav /> */}
+    // </>
   );
 }
