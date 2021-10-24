@@ -43,7 +43,7 @@ export default function Thread({ thread }) {
         }
         alt=""
       /> */}
-      <span className="threadName">{match}</span>
+      <span className="threadName">{username}</span>
     </div>
   );
 }

@@ -8,23 +8,34 @@ const path = require('path');
 const errorHandler = require('./_helpers/error-handler');
 const {authorize, blacklist} = require('./_helpers/authorize');
 
+// Controllers containing routes
+const userController = require('./users/user.controller');
+const matchController = require('./matches/match.controller');
+const listingController = require('./listings/listing.controller')
+const flatController = require('./flats/flat.controller');
+const locationController = require('./locations/location.controller');
+const chatController = require('./chat/chat.controller');
+const notificationController = require('./notification/notification.controller');
+
 // Express App
 const app = express();
-// app.use(cors({origin: ['http://localhost:3000'], credentials:true}));
-app.use(cors({origin: '*'}));
+app.use(cors({origin: ['http://localhost:3000'], credentials:true}));
+// app.use(cors({origin: '*'}));
 app.use(helmet());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-var corsmiddleware = function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*"); 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000"); 
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  next();
-};
 
-//app.use(corsmiddleware);
+  if (req.method === 'OPTIONS') {
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+    return res.status(200).json({});
+  }
+  next();
+});
 
 // Extract Environment Variables
 const { NODE_ENV, PORT, SESSION_KEY } = process.env;
@@ -36,12 +47,12 @@ if (NODE_ENV === 'production') {
 
 // API routes
 const router = express.Router();
-router.use('/users', require('./users/user.controller'));
-router.use('/flats', require('./flats/flat.controller'));
-router.use('/matches', require('./matches/match.controller'));
-router.use('/listings', require('./listings/listing.controller'));
-router.use('/locations', require('./locations/location.controller'));
-router.use('/chat', require('./chat/chat.controller'));
+router.use('/users', userController);
+router.use('/flats', flatController);
+router.use('/matches', matchController);
+router.use('/listings', listingController);
+router.use('/locations', locationController);
+router.use('/chat', chatController);
 router.use('/notifications', require('./notification/notification.controller'));
 router.get('/logout', authorize(), logout);
 
@@ -67,16 +78,16 @@ app.use(function (err, req, res, next) {
   res.json({ error: err });
 });
 
-// In Production, serve React build
-if (NODE_ENV === 'production') {
-  // Serve Static Files
-  app.use(express.static(path.join(__dirname, '../client/build')));
+// // In Production, serve React build
+// if (NODE_ENV === 'production') {
+//   // Serve Static Files
+//   app.use(express.static(path.join(__dirname, '../client/build')));
 
-  // Route all requests to client router
-  app.get('*', function (_, res) {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-  });
-}
+//   // Route all requests to client router
+//   app.get('*', function (_, res) {
+//     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+//   });
+// }
 
 // Serve API
 app.listen(PORT, () => {

@@ -16,14 +16,50 @@ import Typography from '@mui/material/Typography';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton'
 import Stack from '@mui/material/Stack';
 import { deepOrange, deepPurple } from '@mui/material/colors';
 import { useEffect, useRef, useState } from "react";
 import { Role, useAuth } from "../App/Authentication";
 import api from "../../utils/api";
 import { io } from "socket.io-client";
+import { styled, alpha } from "@mui/system";
+import { InputBase } from "@mui/material";
+import SendIcon from '@mui/icons-material/Send';
 
 const drawerWidth = 240;
+
+const MessageInput = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: theme.spacing(1),
+    width: 'auto',
+  },
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      width: '70ch',
+      '&:focus': {
+        width: '74ch',
+      },
+    },
+  },
+}));
 
 export default function Chat() {
   const [chatThreads, setChatThreads] = useState([]);
@@ -89,7 +125,12 @@ export default function Chat() {
       if (listing && listing !== null) {
         await api.getListingMatches(listing.id, jwt)
         .then((res) => {
-          setMatches([...matches, res.data]);
+          // For each 
+          const matches = res.data
+          matches.forEach((match) => (
+            setMatches([...matches, match])
+          ))
+          
           console.log(matches)
         }).catch((error) => {
           console.log('error ' + error);
@@ -112,7 +153,7 @@ export default function Chat() {
     }
 
     // Fetch depending on user role
-    if (user && user.role === 'flat') {
+    if (user && user.role === Role.Flat) {
       getListings();
       socket.current.emit("addUser", user.id);
 
@@ -121,10 +162,18 @@ export default function Chat() {
         await api.getChatByMatchId(match.id, jwt)
         .then((res) => {
           console.log(res.data);
-          setChatThreads([...chatThreads, res.data])
+          // if no chat returned, then create chat
+          if (Object.keys(res.data).length === 0){ 
+            api.addChat(jwt, {matchId: match.id, messages: []})
+            .then((resp) => {
+              setChatThreads([...chatThreads, resp.data]);
+            })
+          } else {
+            setChatThreads([...chatThreads, res.data])
+          }
         })
       ))
-    } else if (user && user.role === 'flatee') {
+    } else if (user && user.role === Role.Flatee) {
       getFlateeMatches();
       socket.current.emit("addUser", user.id);
 
@@ -133,7 +182,7 @@ export default function Chat() {
         await api.getChatByMatchId(match.id, jwt)
         .then((res) => {
           console.log(res.data);
-          if (res.data[0].length === 0){ // Create Chat
+          if (Object.keys(res.data).length === 0){ // Create Chat
             api.addChat(jwt, {matchId: match.id, messages: []})
             .then((resp) => {
               setChatThreads([...chatThreads, resp.data]);
@@ -227,6 +276,49 @@ export default function Chat() {
           </List>
         </Box>
       </Drawer>
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      {currentChatThread ? (
+        // Messages
+        <>
+            {/* Messages */}
+            <div className="chatBoxTop">
+              {messages.map((m) => (
+                <div ref={scrollRef}>
+                  <Message message={m} own={m.sender === user._id} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Bottom Message Bar */}
+            <AppBar
+              position="fixed"
+              sx={{ top: 'auto', bottom: 0, width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px` }}
+            >
+              <Toolbar>
+                <MessageInput>
+                  <StyledInputBase
+                    className="chatMessageInput"
+                    placeholder="Message..."
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    value={newMessage} />
+                </MessageInput>
+                <IconButton
+                  size="large"
+                  aria-label="send message"
+                  color="inherit"
+                  className="chatSubmitButton"
+                  onClick={handleSubmit}
+                >
+                  <SendIcon />
+                </IconButton>
+              </Toolbar>
+            </AppBar></>
+      ) : (
+        <Typography variant="h6" className="noConversationText" component="span">
+          Open a match to start a chat.
+        </Typography>
+      )}
+      </Box>
     </Box>
       // {/* <Navigation /> */}
       // <div className="chat">
