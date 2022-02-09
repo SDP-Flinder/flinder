@@ -6,7 +6,7 @@ import Paper from "@material-ui/core/Paper";
 import * as moment from 'moment';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
-import api from '../../utils/api';
+import axios from 'axios';
 import { Config } from '../../config';
 import { useAuth } from '../App/Authentication';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -17,6 +17,7 @@ import Navigation from "../App/Navigation";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ListingList from "../Listing";
 import UpdateListing from './UpdateListing';
+import Confirmation from '../Profile/EditBio/Confirmation';
 
 //Transition effect
 const checked = true;
@@ -29,10 +30,10 @@ const useStyles = makeStyles(theme => ({
     padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
-    minHeight: 500,
+    minHeight: "650px",
   },
   first: {
-    padding: theme.spacing(1),
+    padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
   },
@@ -92,9 +93,16 @@ function ListingDisplay(props) {
   const [viewMatch, setViewMatch] = useState(true);
   const [open, setOpen] = useState(false);
 
+  //Helper axios calls
+  const instance = axios.create({
+    baseURL: Config.Local_API_URL,
+    timeout: 1000,
+    headers: { Authorization: `Bearer ${jwt}` }
+  })
+
   //Delete the current listing from the database
   const deleteListing = async () => {
-    await api.deleteListingById(listing.id, jwt);
+    await instance.delete('/listings/'.concat(listing.id));
     props.history.push('/');
   }
 
@@ -107,7 +115,7 @@ function ListingDisplay(props) {
 
   //Update the active status of the current listing in the database
   const updateActive = async (activeStatus) => {
-    await api.updateListingById(listing.id, jwt, { active: activeStatus });
+    await instance.put('/listings/'.concat(listing.id), { active: activeStatus });
   }
 
   //Check if the user viewing is the owner of the listing before rendering the update/delete buttons
@@ -151,10 +159,8 @@ function ListingDisplay(props) {
   //Methods to ensure current displayed information is accurate
   useEffect(() => {
     async function getListing() {
-      await api.getListingById(id, jwt)
-      .then((res) => {
-        setListing(res.data);
-      })
+      const listing = await instance.get('/listings/'.concat(id));
+      setListing(listing.data);
     }
     getListing();
   }, [id])
@@ -180,10 +186,8 @@ function ListingDisplay(props) {
 
   useEffect(() => {
     async function getListing() {
-      await api.getListingById(id, jwt)
-      .then((res) => {
-        setListing(res.data);
-      })
+      const listing = await instance.get('/listings/'.concat(id));
+      setListing(listing.data);
     }
     getListing();
   }, [open])
@@ -191,6 +195,48 @@ function ListingDisplay(props) {
   const viewListingMatches = () => {
     setViewMatch(!viewMatch);
   }
+
+  //Handle upload photo
+  const [confirmation, setConfirmation] = React.useState(false);
+  const handleConfirmationOpen = () => {
+    setConfirmation(true);
+  }
+  const handleConfirmationClose = () => {
+      window.location.reload();
+  }
+
+
+  const [photo, setPhoto] = useState({});
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(photo);
+    
+    if(!photo || photo === ''){
+        window.alert('Please choose a file.');
+    }
+    else
+    {
+
+    const URL = 'http://localhost:4000/'.concat("listings/photo/").concat(id);
+
+    const formData = new FormData();
+
+    formData.append('profileImage', photo);
+
+    const config = {
+        headers: {
+        Authorization: `Bearer ${jwt}`,
+            
+        'content-type': 'multipart/form-data'
+        }
+    }
+
+    await axios.put(URL, formData, config).then(setConfirmation(true)).catch(err =>console.log(err));
+    }
+  }
+  
+  const [editPhoto, setEditPhoto] = React.useState(true);
 
   return (
     <div className={classes.root}>
@@ -229,7 +275,47 @@ function ListingDisplay(props) {
                     <Slide direction="up" in={checked} mountOnEnter unmountOnExit>
                       <Grid item xs={5}>
                         <Paper variant="outlined" className={classes.first}>
-                          <ListingList />
+
+                          {(listing.photo && editPhoto) ?
+                          <div>
+                          <img className = "listing-avt"
+                          src = {"http://localhost:4000/".concat(listing.photo)} />
+
+                          <br/> 
+                          
+                          <Button onClick = {() => setEditPhoto(!editPhoto)}>
+                              Edit
+                          </Button>
+                          </div>
+                          :
+                          <div>
+                          <form onSubmit={handleSubmit}>
+                              <input
+                                  id = "profile-photo"
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={e => {
+                                      setPhoto(e.target.files[0]);
+                                  } }
+                              />
+                              <br/>
+                              <br/>
+
+                              <Button 
+                              variant="contained" 
+                              color="primary"
+                              type="submit"
+                              >
+                                {listing.photo ?
+                                  'Update' : 'Add listing photo'}
+                              </Button>
+
+                              {listing.photo &&
+                              <Button onClick = {() => setEditPhoto(!editPhoto)}>
+                                Cancel 
+                              </Button>}
+                          </form>
+                          </div>}
                         </Paper>
                       </Grid>
                     </Slide>
@@ -295,8 +381,8 @@ function ListingDisplay(props) {
                                 </Grid>
                                 <Grid item xs={6}>
                                   <Paper className={classes.userInfo}>
-                                    {listing.utilities == undefined ? "N/A" :
-                                      (listing.utilities.power == false ? "Not included" : "Included")}
+                                    {listing.utilities === undefined ? "N/A" :
+                                      (listing.utilities.power === false ? "Not included" : "Included")}
                                   </Paper>
                                 </Grid>
 
@@ -305,8 +391,8 @@ function ListingDisplay(props) {
                                 </Grid>
                                 <Grid item xs={6}>
                                   <Paper className={classes.userInfo}>
-                                    {listing.utilities == undefined ? "N/A" :
-                                      (listing.utilities.water == false ? "Not included" : "Included")}
+                                    {listing.utilities === undefined ? "N/A" :
+                                      (listing.utilities.water === false ? "Not included" : "Included")}
                                   </Paper>
                                 </Grid>
 
@@ -315,8 +401,8 @@ function ListingDisplay(props) {
                                 </Grid>
                                 <Grid item xs={6}>
                                   <Paper className={classes.userInfo}>
-                                    {listing.utilities == undefined ? "N/A" :
-                                      (listing.utilities.internet == false ? "Not included" : "Included")}
+                                    {listing.utilities === undefined ? "N/A" :
+                                      (listing.utilities.internet === false ? "Not included" : "Included")}
                                   </Paper>
                                 </Grid>
 
@@ -338,6 +424,12 @@ function ListingDisplay(props) {
         </Slide>
       </Paper>
       <UpdateListing open={open} setOpen={setOpen} />
+
+      <Confirmation
+                open={confirmation}
+                handleClickOpen={handleConfirmationOpen}
+                handleClose={handleConfirmationClose}
+      />
     </div>
   );
 }

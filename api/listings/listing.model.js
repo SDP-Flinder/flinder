@@ -14,8 +14,9 @@ const ListingSchema = new Schema({
         water: { type: Boolean },
         power: { type: Boolean },
         internet: { type: Boolean },
-    } 
-},
+    },
+  },
+  photo: { type: String },
 });
 
 ListingSchema.set('toJSON', {

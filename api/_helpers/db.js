@@ -1,6 +1,6 @@
 require('dotenv').config()
 const mongoose = require('mongoose')
-const MONGODB_URI = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.yqn5t.mongodb.net/flinder?retryWrites=true&w=majority`
+const MONGODB_URI = process.env.DB_CONNECTION
 //process.env.MONGODB_URI
 // mongoose
 //     .connect(MONGODB_URI, { useNewUrlParser: true , useUnifiedTopology: true })
@@ -20,5 +20,4 @@ module.exports = {
     matchList: require('../matches/match.model'),
     Listing: require('../listings/listing.model'),
     Location: require('../locations/location.model'),
-    Chat: require('../chat/chat.model'),
 };

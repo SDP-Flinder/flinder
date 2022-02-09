@@ -15,12 +15,12 @@ import { Link } from 'react-router-dom';
 import {ReactComponent as FlinderLogo} from '../../../assets/logo-white.svg';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
-import { Button, Tooltip } from '@material-ui/core';
+import { Button, Grid, Tooltip } from '@material-ui/core';
 import FilterDrawerForFlatee from '../../Match/filterDrawerForFlatee';
-import Noti from '../Notification';
+import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 // import { InputBase } from '@material-ui/core';
 // import SearchIcon from '@mui/icons-material/Search';
-
+import Noti from '../Notification';
 
 const drawerWidth = 240;
 
@@ -199,17 +199,17 @@ export default function Navigation(props) {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      {props.currentPath == "home" &&
-      <MenuItem>
-        <IconButton aria-label="show filter" color="inherit">
-          <Badge color="secondary">
-            <ManageSearchIcon />
-          </Badge>
-        </IconButton>
-        <p>Filter</p>
-      </MenuItem>}
 
       {useAuth().isAuthed ? (
+        <div>
+            <MenuItem component={Link} to="/faq">
+            <IconButton 
+              color = "inherit" >
+                  <LiveHelpIcon/>
+              </IconButton>
+              <p>FAQ</p>
+            </MenuItem>
+
             <MenuItem component={Link} to="/logout">
             <IconButton 
             color = "inherit" >
@@ -217,11 +217,7 @@ export default function Navigation(props) {
             </IconButton>
             <p>Log Out</p>
             </MenuItem>
-          // <MenuItem>
-          //     <Link component={RouterLink} to="/logout" onClick={handleMenuClose}>
-          //         Log out 
-          //     </Link>
-          // </MenuItem>
+        </div>
         ) : (null)}
       
     </Menu>
@@ -249,38 +245,16 @@ export default function Navigation(props) {
               <FlinderLogo className ="small-logo"/>
               </Tooltip>
           </Button>
-          {/* <Grid container justifyContent = "center">
-          <Typography className={classes.title} variant="h5" noWrap>
-            {props.pageName}
-          </Typography>
-          </Grid> */}
-          {/* <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <InputBase
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-            />
-          </div>  */}
+
           <div className={classes.grow} />
-          <Noti/>
-          {(user.role == "flatee" && props.pageName == "Home")? <FilterDrawerForFlatee/> : null}
+          {(user.role === "flatee" && props.pageName === "Home")? <FilterDrawerForFlatee/> : null}
           <div className={classes.sectionDesktop}>
+          <Noti/>
             {useAuth().isAuthed ? (
             <IconButton component={Link} to="/logout"
             color = "inherit" >
                 <ExitToAppIcon/>
             </IconButton>
-          // <MenuItem>
-          //     <Link component={RouterLink} to="/logout" onClick={handleMenuClose}>
-          //         Log out 
-          //     </Link>
-          // </MenuItem>
         ) : (null)}
 
           </div>

@@ -157,19 +157,19 @@ export default function FilterDrawerForFlatee() {
       let minTemp = min;
       let maxTemp = max;
 
-      if (min == 50)
+      if (min === 50)
       {
         minTemp = 50;
       }
-      else if (min == '')
+      else if (min === '')
       {
         minTemp = maxTemp + 1;
       }
-      if (max == 50)
+      if (max === 50)
       {
         maxTemp = 50;
       }
-      else if (max == '')
+      else if (max === '')
       {
         maxTemp = 0;
       }
@@ -197,7 +197,7 @@ export default function FilterDrawerForFlatee() {
       className = "filterText"
       >Filter</Typography>
       <Divider>
-        <Chip label="My ideal flat..." />
+        <Chip label="Are you..." />
       </Divider>
       <Grid item xs = {12}>
         <FormGroup component="fieldset">
@@ -210,7 +210,7 @@ export default function FilterDrawerForFlatee() {
                 setIsSmoker(!isSmoker);
               }}
             />}
-            label="Smoker Allowed"
+            label="A Smoker"
             labelPlacement = "end"
           />
         </FormGroup>
@@ -227,7 +227,7 @@ export default function FilterDrawerForFlatee() {
                 setIsCouple(!isCouple);
               }}
             />}
-            label="Couple Allowed"
+            label="A Couple"
             labelPlacement = "end"
           />
         </FormGroup>
@@ -246,7 +246,7 @@ export default function FilterDrawerForFlatee() {
               setHasPet(!hasPet);
             }}
           />}
-          label="Pets Allowed"
+          label="Having Pets"
           labelPlacement = "end"
         />
         </FormGroup>
@@ -358,7 +358,7 @@ export default function FilterDrawerForFlatee() {
 
             let region = [];
             for(var k = 0; k < repo.length; k++ ){
-              if(repo[k].city == e.target.value){
+              if(repo[k].city === e.target.value){
                 region.push(repo[k].region.name);
               }
             }
@@ -388,7 +388,7 @@ export default function FilterDrawerForFlatee() {
             setSuburb([]);
 
             for(var k = 0; k < repo.length; k++ ){
-              if(repo[k].region.name == e.target.value){
+              if(repo[k].region.name === e.target.value){
                 setSuburbDisplay(repo[k].region.suburb)
               }
             }
@@ -475,7 +475,7 @@ export default function FilterDrawerForFlatee() {
           {
             for(let k =0; k<repo.length;k++)
             {
-              if (repo[k].city == city)
+              if (repo[k].city === city)
               {
                 preferredArea.suburb.push(...repo[k].region.suburb);
               }

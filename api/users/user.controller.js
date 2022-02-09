@@ -4,6 +4,34 @@ const userService = require('./user.service');
 const {authorize} = require('../_helpers/authorize');
 const Role = require('../_helpers/role');
 
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './uploads/');
+
+    },
+    filename: function(req, file,cb) {
+        cb(null, Date.now() + file.originalname.replace(/\s/g, '_'));
+    }
+});
+
+//This doesn't work
+const fileFilter = (req, file, cb) => {
+    if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/png'){
+        cb(null, true);     //accept the file
+    } else {
+        //reject
+        cb(null, false);
+    }
+
+};
+
+const upload = multer({
+    storage: storage,
+});
+
+
 // routes
 router.post('/authenticate', authenticate);
 router.post('/register', register);
@@ -11,6 +39,7 @@ router.get('/', authorize(Role.Admin), getAll);
 router.get('/current', authorize(), getCurrent);
 router.get('/:id', authorize(),  getById);
 router.put('/:id', authorize(), update);
+router.put('/photo/:id', authorize(), upload.single('profileImage') , updatePhoto);
 router.delete('/:id', authorize(), _delete);
 
 module.exports = router;
@@ -26,7 +55,7 @@ function authenticate(req, res, next) {
  */
 function register(req, res, next) {
     userService.create(req.body)
-        .then((msg) => (msg == 'user-created') ? authenticate((req.body.username, req.body.password), res, next) : res.json({message: msg}))
+        .then((msg) => (msg === 'user-created') ? authenticate((req.body.username, req.body.password), res, next) : res.json({message: msg}))
         .catch(err => next(err));
 }
 
@@ -52,6 +81,21 @@ function getById(req, res, next) {
     // }
 
     userService.getById(req.params.id)
+        .then(user => user ? res.json(user) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function updatePhoto(req, res, next) {
+    const photo = req.file;
+    console.log(photo);
+    const id = req.params.id;
+
+    // // only allow admins to access other user records
+    // if (id !== currentUser.sub && currentUser.role !== Role.Admin) {
+    //     return res.status(401).json({ message: 'Unauthorized' });
+    // }
+
+    userService.updatePhoto(req.params.id, req)
         .then(user => user ? res.json(user) : res.sendStatus(404))
         .catch(err => next(err));
 }

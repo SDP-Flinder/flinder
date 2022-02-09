@@ -101,7 +101,7 @@ export default function EditDialog(props) {
         console.log(newUser);
         //Clear errors
         setError({});
-        if(buttonID == "pass")
+        if(buttonID === "pass")
         setOldPass('');
         //Close dialog
         handleClose();
@@ -127,10 +127,10 @@ export default function EditDialog(props) {
 
           //Set the display user
           props.setUser(newUser);
-          if(buttonID != "pass"){
+          if(buttonID !== "pass"){
             updateUser();
             props.handleConfirmationOpen();
-          } else if (buttonID == "pass"){
+          } else if (buttonID === "pass"){
             updateUser();
             //Log out once the user change password
             setChangePw(true);
@@ -165,11 +165,11 @@ export default function EditDialog(props) {
             flatRules: newUser.flatRules,
         };
 
-        if(buttonID == "pass"){
+        if(buttonID === "pass"){
             bodyParameters.password = pw;
         }
 
-        if(buttonID == "flatee-bio"){
+        if(buttonID === "flatee-bio"){
             bodyParameters.bio = newUser.bio;
         }
 
@@ -190,7 +190,7 @@ export default function EditDialog(props) {
     //Check if username and password match
     useEffect(() => {
         async function checkPassword () {
-            if(buttonID == "pass"){
+            if(buttonID === "pass"){
                 const incorrect = await validatePassword(user.username, oldPass);
                 setIsIncorrect(incorrect);
             }
@@ -205,7 +205,7 @@ export default function EditDialog(props) {
     const findErrors = () => {
         const errorFound = {};
         
-        if(buttonID == "user-info"){
+        if(buttonID === "user-info"){
             if (!newUser.firstName.match(/^[a-zA-Z]+$/)) {
                 errorFound.firstName = "This should contain letters only.";
             }
@@ -215,7 +215,7 @@ export default function EditDialog(props) {
             }
         }
 
-        if(buttonID == "account-info"){
+        if(buttonID === "account-info"){
             //Email constraint
             if (!newUser.email || newUser.email === '') { //Blank email
                 errorFound.email = 'Email cannot be empty';
@@ -224,20 +224,20 @@ export default function EditDialog(props) {
             }
 
             for(let k = 0; k < data.length; k++){
-                if(data[k].email == newUser.email && data[k].username != newUser.username){
+                if(data[k].email === newUser.email && data[k].username !== newUser.username){
                     errorFound.email = 'Email has already been used.';
                 }
             }
         }
 
-        if(buttonID == 'pass'){
+        if(buttonID === 'pass'){
 
             if (!oldPass || oldPass === '') { //Blank password
                 errorFound.oldPass = 'Old password cannot be empty';
             }
 
-            if(oldPass != ''){
-                if(isIncorrect == true){
+            if(oldPass !== ''){
+                if(isIncorrect === true){
                     errorFound.oldPass = 'Incorrect password';
                 }
             }
@@ -251,7 +251,7 @@ export default function EditDialog(props) {
             }
         }
 
-        if(buttonID == 'flat-info'){
+        if(buttonID === 'flat-info'){
             //Address constraint
             if (!newUser.address.street || newUser.address.street === ''){
                 errorFound.street = "Street cannot be empty";
@@ -259,10 +259,10 @@ export default function EditDialog(props) {
 
 
             for(let k = 0; k < data.length; k++){
-                if(data[k].role == 'flat'){
-                    if(data[k].address.street.toLowerCase() == newUser.address.street.toLowerCase() && data[k].username != newUser.username){
-                        if(data[k].address.suburb.toLowerCase() == newUser.address.suburb.toLowerCase()){
-                            if(data[k].address.city.toLowerCase() == newUser.address.city.toLowerCase()){
+                if(data[k].role === 'flat'){
+                    if(data[k].address.street.toLowerCase() === newUser.address.street.toLowerCase() && data[k].username !== newUser.username){
+                        if(data[k].address.suburb.toLowerCase() === newUser.address.suburb.toLowerCase()){
+                            if(data[k].address.city.toLowerCase() === newUser.address.city.toLowerCase()){
                                 errorFound.street = "This address has already been used.";
                                 errorFound.suburb = "This address has already been used";
                             }
@@ -273,7 +273,7 @@ export default function EditDialog(props) {
 
             if (!newUser.address.city || newUser.address.city === ''){
                 errorFound.city = "City cannot be empty";
-            } else if( (newUser.address.city.toLowerCase() != "auckland") && (newUser.address.city.toLowerCase() != "wellington")){
+            } else if( (newUser.address.city.toLowerCase() !== "auckland") && (newUser.address.city.toLowerCase() !== "wellington")){
                 errorFound.city = 'This app is currently available on either Auckland or Wellington.'
             }
 
@@ -286,12 +286,12 @@ export default function EditDialog(props) {
             }
         }
 
-        if(buttonID == "flatee-info"){
+        if(buttonID === "flatee-info"){
             //Flatee constraint
 
-            if(!newUser.checklist.priceRange.min || newUser.checklist.priceRange.min == ''){
+            if(!newUser.checklist.priceRange.min || newUser.checklist.priceRange.min === ''){
                 errorFound.price = "Minimum price cannot be empty."
-            } else if(!newUser.checklist.priceRange.max || newUser.checklist.priceRange.max == ''){
+            } else if(!newUser.checklist.priceRange.max || newUser.checklist.priceRange.max === ''){
                 errorFound.price = "Maximum price cannot be empty."
             }else if((newUser.checklist.priceRange.max - newUser.checklist.priceRange.min) <= 0){
                 errorFound.price = "The maximum value must be larger than the minimum."

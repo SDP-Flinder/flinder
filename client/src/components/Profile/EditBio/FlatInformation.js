@@ -35,7 +35,7 @@ const FlatInformation = (props) => {
     const [date, setDate] = React.useState(new Date(leaseComponent[0], leaseComponent[1], leaseComponent[2]));
 
     useEffect(() => {
-        if (props.newUser.flatRules == undefined) {
+        if (props.newUser.flatRules === undefined) {
             props.setUser((prevUser) => ({
                 ...prevUser,
                 flatRules: {
@@ -176,7 +176,7 @@ const FlatInformation = (props) => {
                                     id="smoking"
                                     name="smoking"
                                     color="primary"
-                                    checked={props.newUser.flatRules == undefined ? false : props.newUser.flatRules.smoking}
+                                    checked={props.newUser.flatRules === undefined ? false : props.newUser.flatRules.smoking}
                                     onChange={() => {
                                         props.setUser((prevUser) => ({
                                             ...prevUser,
@@ -201,7 +201,7 @@ const FlatInformation = (props) => {
                                     id="pets"
                                     name="pets"
                                     color="primary"
-                                    checked={props.newUser.flatRules == undefined ? false : props.newUser.flatRules.pets}
+                                    checked={props.newUser.flatRules === undefined ? false : props.newUser.flatRules.pets}
                                     onChange={() => {
                                         props.setUser((prevUser) => ({
                                             ...prevUser,

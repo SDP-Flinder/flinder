@@ -52,14 +52,7 @@ export default function Home() {
             <CssBaseline />
             <Navigation currentPath = "home" pageName = "Home"/>
             <div className={classes.paper}>
-                {/* <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-                    {`Hello ${user.firstName} ${user.lastName}`}
-                </Typography>
-                {user.role == "flatee"?
-                <FilterDrawerForFlatee/>:
-                blank()} */}
-                {/* User should only be able to access this page when authorised, but just incase. Could remove check */}
-                {user.role == "flatee"?
+                {user.role === "flatee"?
                 //  If the user is a flatee, render this card
                  <CardsForFlatee/>:
                 // If the user is a flat, render this card. listingID = {?}

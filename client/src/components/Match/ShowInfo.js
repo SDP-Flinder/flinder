@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuth } from '../App/Authentication'
 import moment from 'moment';
-import {Button} from "@material-ui/core";
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -114,11 +114,11 @@ const renderFlatee = (classes, Listing) => (
                     <br/>
                     <Stack direction = "row" spacing = {2}>
                         <Chip label = "Pets"
-                        color = {Listing.accountUser.flatRules == undefined ? "default" : 
-                            (Listing.accountUser.flatRules.pets == true ? "primary" : "default")}/>
+                        color = {Listing.accountUser.flatRules === undefined ? "default" : 
+                            (Listing.accountUser.flatRules.pets === true ? "primary" : "default")}/>
                         <Chip label = "Smoking"
-                        color = {Listing.accountUser.flatRules == undefined ? "default" : 
-                            (Listing.accountUser.flatRules.smoking == true ? "primary" : "default")}/>
+                        color = {Listing.accountUser.flatRules === undefined ? "default" : 
+                            (Listing.accountUser.flatRules.smoking === true ? "primary" : "default")}/>
                     </Stack>
                 </Grid>
 
@@ -211,7 +211,7 @@ const ShowInfo = (props) => {
       <div>
           <Grow in={checked}>
             <Button
-            variant="contained" color = "primary" onClick={handleClickOpen}>
+            variant="contained" onClick={handleClickOpen}>
                         View Info
             </Button>
           </Grow>
@@ -240,7 +240,7 @@ const ShowInfo = (props) => {
                 </DialogActions>
 
                  <DialogContent>
-                    {user.role == 'flatee' ? renderFlatee(classes, props.Listing) : renderListing(classes, props.person)}
+                    {user.role === 'flatee' ? renderFlatee(classes, props.Listing) : renderListing(classes, props.person)}
                  </DialogContent>
             </Dialog>
       </div>     

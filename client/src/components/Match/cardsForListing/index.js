@@ -1,16 +1,25 @@
-import React, {useState, useEffect, useMemo} from 'react';
+// import react and its hooks
+import React, {
+  useState, useEffect, useMemo,
+} from 'react';
+// import _isEqual function
 import _isEqual from 'lodash/isEqual';
+// import material ui components
 import CloseIcon from '@material-ui/icons/Close';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import IconButton from '@material-ui/core/IconButton';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+// import TinderCards
 import TinderCard from 'react-tinder-card';
-import api from '../../../utils/api';
+// import base url
+import {
+  instance, matchesForListing, unmatch, addFlatee,
+} from '../../../utils/requests';
+// import styles
 import './styles.css';
+// import session user state
 import { useAuth } from '../../App/Authentication';
 import ShowInfo from '../ShowInfo';
-import { Typography } from '@material-ui/core';
-import {WaveSpinner} from "react-spinners-kit";
 
 // create cards component and export it
 const CardsForListing = (props) => {
@@ -19,46 +28,42 @@ const CardsForListing = (props) => {
   const [people, setPeople] = useState([]);
   const [readMore, setReadMore] = useState(null);
   const [showMore, setShowMore] = useState(true);
-  const [loading, setLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const childRefs = useMemo(() => Array(people.length).fill(0).map((i) => React.createRef()));
 
+  const AuthString = 'Bearer '.concat(jwt);
   const listingID = props.listingID; // RETRIEVE LISTING ID
-  let matchparams = {
+  let matchparam = {
     listingID: listingID,
   };
 
   // use effect to gather potential matches for this listing
   useEffect(() => {
     async function fetchData() {
-      setLoading(true);
-      // Load listings from API
-      api.getPotListingMatches(jwt, matchparams)
-      .then((response) => {
-        console.log(response.data)
-        setPeople(response.data)
-        setLoading(false);
+      await instance.get(matchesForListing, {
+        params: matchparam,
+        headers: { Authorization: AuthString },
       })
-      .catch(function (error) {
-          console.log(error)
-      })}
+        .then((res) => {
+          setPeople(res.data);
+        });
+    }
+
     fetchData();
   }, [listingID]);
 
   // swipe function
-  const swiped = (direction, person) => {
-    matchparams = {
-      flateeUsername: person.username,
-      flateeID: person.id,
-      listingUsername: user.username,
+  const swiped = (direction, targetName) => {
+    matchparam = {
+      flateeUsername: targetName,
       listingID: listingID,
     };
     if (_isEqual(direction, 'left')) {
-      api.unmatch(jwt, matchparams);
+      instance.put(unmatch, matchparam, { headers: { Authorization: AuthString } });
     } else if (_isEqual(direction, 'right')) {
-      api.addFlatee(jwt, matchparams);
+      instance.post(addFlatee, matchparam, { headers: { Authorization: AuthString } });
     }
-    alreadyRemoved.push(person.username);
+    alreadyRemoved.push(targetName);
 
     setShowMore(true);
     setReadMore(null);
@@ -101,13 +106,6 @@ const CardsForListing = (props) => {
   return (
     <>
       {/* All the cards */}
-      {loading ? 
-      <div className = "loading">
-      <WaveSpinner size = {50} color="#007A78" loading={loading} />
-      <Typography>        
-        Getting profiles...
-      </Typography>
-      </div> :
       <div className="cards">
         <div className="cards__cardContainer">
           {people.map((person, index) => (
@@ -118,7 +116,7 @@ const CardsForListing = (props) => {
               flickOnSwipe
               preventSwipe={['up', 'down']}
               currentFlateeCard={person.username}
-              onSwipe={(dir) => swiped(dir, person)}
+              onSwipe={(dir) => swiped(dir, person.username)}
             >
               {/* Background image */}
               <div
@@ -143,7 +141,7 @@ const CardsForListing = (props) => {
           ))}
         </div>
         {/* Swipe buttons */}
-        {people.length > 0 ?
+        {people.length > 0 &&
         <div className="swipe-buttons">
           <IconButton
             onClick={() => swipe('left')}
@@ -157,14 +155,8 @@ const CardsForListing = (props) => {
           >
             <FavoriteIcon fontSize="large" />
           </IconButton>
-          </div> :
-            <div style = {{justifyContent: "center"}}>
-              <Typography variant = "body1">
-                You have no matches yet.
-              </Typography>
-          </div>}
+        </div>}
       </div>
-      }
     </>
   );
 };

@@ -1,7 +1,24 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from 'axios';
 import jwtDecode from 'jwt-decode';
 import { Config } from '../../../config';
-import api from "../../../utils/api";
+
+const axiosapi = axios.create({
+    baseURL : Config.Local_API_URL
+});
+
+// JWT Storage in ether session or local (remember me)
+const getJWT = () => {
+  if(sessionStorage.getItem('jwt')) {
+    return sessionStorage.getItem('jwt');
+  } else {
+    if(localStorage.getItem('jwt')) {
+      return localStorage.getItem('jwt');
+      } else {
+      return null;
+    }
+  }
+}
 
 // Create Authentication Context
 const AuthContext = createContext(null);
@@ -14,40 +31,45 @@ export const ProvideAuth = ({ children }) => {
 };
 
 const useProvideAuth = () => {
-  const [jwt, setJWT] = useState(null);
+  /* User object
+   * {role, firstname, lastname, username, createdDate, id}
+   */
+  const jwt = getJWT();
   const [user, setUser] = useState(null);
+  // const isAuthed = user?.id ? true : false;
   const isAuthed = (user && jwt && jwtDecode(jwt).exp * 1000 > Date.now()) ? true : false;
 
   // Get current user data, if they are logged in
   useEffect(() => {
-    if(sessionStorage.getItem('jwt')) {
-      setJWT(sessionStorage.getItem('jwt'));
-    } else if(localStorage.getItem('jwt')) {
-      setJWT(localStorage.getItem('jwt'));
-    }
-
-    // If JWT is stored then load user from api
-    if (jwt && jwt !== null) {
-      api.getJWTUser(jwt)
+    const getUser = async () => {
+      await axiosapi.get('/users/current', { 
+        headers: { 'Authorization': `bearer ${getJWT()}`}
+      })
       .then((response) => {
         setUser(response.data)
+        
       })
       .catch(function (error) {
-          console.log(error)
+          if(Config.Logging) 
+            console.log(error)
           setUser(null)
       })
     }
+
+    console.log(jwt);
+    // If JWT is stored then load user
+    if (jwt !== null) {getUser()}
     // console.log(`User object: ${user}`);
     // console.log(`Is authed: ${isAuthed}`);
 
     return () => {
       setUser(null);
     };
-  }, [jwt]);
+  }, []);
 
   // Handle signing in
   const signin = async (username, password, remember) => {
-    return api.authenticate({ 
+    return await axiosapi.post('/users/authenticate', { 
       username: username, 
       password: password
     })
@@ -65,7 +87,8 @@ const useProvideAuth = () => {
         return response;
     })
     .catch(function (error) {
-        console.log(`Sign in Error: ${error}`);
+        if(Config.Logging)
+            console.log(`Sign in Error: ${error}`);
         return error;
     })
   };
@@ -74,10 +97,10 @@ const useProvideAuth = () => {
   const signout = () => {
     console.log('Sign Out Called:');
     console.log(user);
-    console.log(jwt);
-
-    // Call API
-    return api.logout(jwt)
+    console.log(getJWT());
+    return axiosapi.get('/logout', { 
+      headers: { 'Authorization': `bearer ${getJWT()}`}
+    })
     .then(function () {
       localStorage.removeItem('jwt');
       sessionStorage.removeItem('jwt');
@@ -106,15 +129,19 @@ const useProvideAuth = () => {
         checklist: user.checklist,
         rentUnits: "Per Week",
       };
-      
-      // Call API to register new user
-      api.register({userParam})
-      .then(function (response) {
-        console.log(response)
+      console.log('reachced here');
+      await axiosapi.post('/users/register', {
+        ...userParam
+      }).then(function (response) {
+        if(Config.Logging){
+          console.log(response)
+        }
+
         return response;
     })
     .catch(function (error) {
-        console.log(error)
+        if(Config.Logging)
+            console.log(error)
         return error;
     });
     } else if(user.accountType === 'flat'){
@@ -132,11 +159,13 @@ const useProvideAuth = () => {
         leaseDate: user.leaseDate,
         flatRules: user.flatRules,
       };
-
-      // Call API to register new user
-      api.register({userParam})
-      .then(function (response) {
-        console.log(response)
+      console.log('reachced here');
+      await axiosapi.post('/users/register', {
+        ...userParam
+      }).then(function (response) {
+        if(Config.Logging){
+          console.log(response)
+        }
         return response;
     })
     .catch(function (error) {
@@ -148,7 +177,7 @@ const useProvideAuth = () => {
 
     return signin(user.username, user.password, false);
   };
-  return { user, setUser, jwt, isAuthed, signin, signout, signup };
+  return { user, jwt, isAuthed, signin, signout, signup };
 };
 
 export const Role = {

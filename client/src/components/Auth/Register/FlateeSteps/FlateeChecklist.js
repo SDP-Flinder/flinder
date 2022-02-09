@@ -173,7 +173,7 @@ const FlateeChecklist = (props) => {
                 </IconButton>
 
                 <IconButton variant="contained"
-                disabled = {(min == 0 || max == 3000)? true : false}
+                disabled = {(min === 0 || max === 3000)? true : false}
                 color = "primary"
                 type = "submit">
                     <ArrowForwardIosIcon/>

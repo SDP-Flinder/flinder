@@ -12,6 +12,7 @@ module.exports = {
     getFlatAccount,
     addListing,
     update,
+    updatePhoto,
     delete: _delete
 };
 
@@ -66,6 +67,19 @@ async function update(id, listingparam) {
     Object.assign(listing, listingparam.body);
    return await listing.save();
 }
+
+async function updatePhoto(id, listingparam) {
+    const listing = await Listing.findById(id);
+
+    Object.assign(listing, listingparam.body);
+
+    listing.photo = listingparam.file.path;
+    console.log('photo is',listing.photo);
+    console.log('listing info: ', listing);
+
+   return await listing.save();
+}
+
 
 //Find and delete the specified listing
 async function _delete(id) {

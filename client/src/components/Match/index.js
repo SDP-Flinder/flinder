@@ -1,31 +1,21 @@
 import React, { useEffect, useState } from "react";
+import { makeStyles } from '@material-ui/core/styles';
+import { Typography } from "@material-ui/core"
+import { useAuth } from "../App/Authentication";
 import Navigation from "../App/Navigation";
 import Button from '@material-ui/core/Button';
-import api from '../../utils/api';
+import axios from 'axios';
+import { Config } from '../../config';
 import { Grid } from "@material-ui/core";
 import { Grow } from "@material-ui/core";
-import Paper from "@material-ui/core/Paper";
-import { makeStyles } from '@material-ui/core/styles';
-import { Typography } from "@material-ui/core";
-import { useAuth } from '../App/Authentication';
-
 
 //Set the styles to be used on the page
 const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1
-  },
   paper: {
     marginTop: theme.spacing(8),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'left',
-  },
-  parentPaper: {
-    marginTop: theme.spacing(8),
-    padding: theme.spacing(2),
-    margin: "auto",
-    maxWidth: 1600
   },
   button: {
     margin: theme.spacing(3, 0, 2),
@@ -60,11 +50,20 @@ const useStyles = makeStyles((theme) => ({
 
 const checked = true;
 
-//Class for displaying a list of buttons for each successful match on an account
+/**
+ * Class for displaying a list of buttons for each successful match on an account
+ */
 export default function Match(props) {
   const classes = useStyles();
   const { user, jwt } = useAuth();
   const [matches, setMatches] = useState([]);
+
+  //Helper for ease of use when making axios calls
+  const instance = axios.create({
+    baseURL: Config.Local_API_URL,
+    timeout: 1000,
+    headers: { Authorization: `Bearer ${jwt}` }
+  })
 
   //Render a set of buttons for each match loaded into the global state, depending on the role of the signed in account
   const renderButtons = () => {
@@ -80,36 +79,38 @@ export default function Match(props) {
     else {
       return matches.map((match) => (
         <div key={++count}>
-          <Grow
-            in={checked}
-          >
-            <Grid className={classes.matchIcon} container item xs={12} direction="row" >
-              <Grid item>
-                <img src="https://forums.terraria.org/data/avatars/l/128/128493.jpg?1550988870"
-                  className={classes.avt} />
-              </Grid>
-
-              <Grid>
-                <Typography variant="body1" className={classes.info}>
-                  {user.role == 'flat' ? match.flateeUsername : match.listingUsername}
-                </Typography>
-              </Grid>
-
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={function () { selectMatch(match) }}
-                >
-                  <Typography variant="caption">
-                    View
-                  </Typography>
-                </Button>
-              </Grid>
+        <Grow
+          in={checked}
+        >
+          <Grid className = {classes.matchIcon} container item xs = {12} direction = "row" >
+            <Grid item>
+              <img src = "https://forums.terraria.org/data/avatars/l/128/128493.jpg?1550988870"
+              className = {classes.avt}/>
             </Grid>
-          </Grow>
-          <br />
-          <br />
+
+            <Grid>
+              <Typography variant = "body1" className = {classes.info}>
+                  {user.role === 'flat' ? match.flateeUsername : 
+                  (match.listingUsername === undefined ? `#${match.listingID.slice(-3)}`
+                  : match.listingUsername)}
+              </Typography>
+            </Grid>
+
+            <Grid item>
+              <Button
+                variant="contained"
+                color = "primary"
+                onClick={function () { selectMatch(match) }}
+              >
+                <Typography variant = "caption">
+                View
+                </Typography>
+              </Button>
+            </Grid>
+          </Grid>
+        </Grow>
+        <br/>
+        <br/>
         </div>
       ))
     }
@@ -129,25 +130,21 @@ export default function Match(props) {
     //Fetches all listings for the signed in flat account, to then be used to fetch their matches
     async function getListings() {
       var listings = [];
-      api.getListingByFlatId(user.id, jwt)
+      await instance.get('/listings/flat/'.concat(user.id))
         .then(res => {
           listings = res.data
-        }).catch((error) => {
-          console.log('error ' + error);
         });
-      listings.forEach(listing => {
+      const listingList = listings;
+      listingList.forEach(listing => {
         getListingMatches(listing);
       })
     }
 
     //Fetches all successful matches for a given listing
     async function getListingMatches(listing) {
-      api.getListingMatches(listing.id, jwt)
+      await instance.get('/matches/getSuccessMatchesForListing/'.concat(listing.id))
         .then(res => {
-          console.log(res.data);
           tempMatches = res.data
-        }).catch((error) => {
-          console.log('error ' + error);
         });
       tempMatches.forEach(match => {
         setMatches(matches => [...matches, match])
@@ -156,14 +153,14 @@ export default function Match(props) {
 
     //Fetches all successful matches for the signed in flatee
     async function getFlateeMatches() {
-      api.getFlateeMatches(user.id, jwt)
+      await instance.get('/matches/getSuccessMatchesForFlatee/'.concat(user.id))
         .then(res => {
-          console.log(res.data);
-          tempMatches = res.data;
-        }).catch((error) => {
-          console.log('error ' + error);
+          tempMatches = res.data
         });
-      setMatches(tempMatches);
+      // setMatches(tempMatches);
+      tempMatches.forEach(match => {
+        setMatches(matches => [...matches, match])
+      })
     }
 
     //Run the code to fetch the correct data, based on the role of the account
@@ -177,17 +174,18 @@ export default function Match(props) {
 
   //Simple display of the match list buttons
   return (
-    <div className={classes.root}>
+    <>
       <Navigation />
-      <Paper className={classes.parentPaper}>
-          <Typography component="h1" variant="h5" color="inherit" noWrap className={classes.title}>
-            Your Matches
-          </Typography>
-          <br />
-          <Grid container spacing={1}>
-            {renderButtons()}
-          </Grid>
-      </Paper>
-    </div>
+      <div className={classes.paper}>
+        <br />
+        <Typography component="h1" variant="h5" color="inherit" noWrap className = {classes.title}>
+          Your Matches
+        </Typography>
+        <br />
+        <Grid container spacing = {1}>
+        {renderButtons()}
+        </Grid>
+      </div>
+    </>
   );
 };

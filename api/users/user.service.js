@@ -10,6 +10,7 @@ module.exports = {
     getById,
     create,
     update,
+    updatePhoto,
     delete: _delete
 };
 
@@ -66,6 +67,31 @@ async function update(id, userParam) {
         user.hash = bcrypt.hashSync(userParam.body.password, 10);
     }
 
+    console.log('user data is', user);
+
+    return await user.save();
+}
+
+async function updatePhoto(id, userParam) {
+    const user = await User.findById(id);
+
+    // validate
+    if (!user) throw 'User not found';
+    if (user.username !== userParam.username && await User.findOne({ username: userParam.username })) {
+        throw 'Username "' + userParam.username + '" is already taken';
+    }
+
+
+    // copy userParam properties to user
+    Object.assign(user, userParam.body);
+
+    // hash password if it was entered
+    if (userParam.body.password) {
+        user.hash = bcrypt.hashSync(userParam.body.password, 10);
+    }
+
+    user.photo = userParam.file.path;
+    
     console.log('user data is', user);
 
     return await user.save();

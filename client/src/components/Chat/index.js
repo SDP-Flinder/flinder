@@ -1,84 +1,27 @@
-import "../../style/chat.css";
-// import Topbar from "./Topbar";
-import Navigation from "../App/Navigation";
-import BottomNav from "../App/Navigation/BottomNav";
-import Thread from "./Thread";
+
+import Conversation from "./Conversation";
 import Message from "./Message";
-import ChatOnline from "./ChatOnline";
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import AppBar from '@mui/material/AppBar';
-import CssBaseline from '@mui/material/CssBaseline';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton'
-import Stack from '@mui/material/Stack';
-import { deepOrange, deepPurple } from '@mui/material/colors';
-import { useEffect, useRef, useState } from "react";
-import { Role, useAuth } from "../App/Authentication";
-import api from "../../utils/api";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { useAuth } from "../App/Authentication";
+import Navigation from "../App/Navigation";
+import axios from "axios";
 import { io } from "socket.io-client";
-import { styled, alpha } from "@mui/system";
-import { InputBase } from "@mui/material";
-import SendIcon from '@mui/icons-material/Send';
-
-const drawerWidth = 240;
-
-const MessageInput = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(1),
-    width: 'auto',
-  },
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      width: '70ch',
-      '&:focus': {
-        width: '74ch',
-      },
-    },
-  },
-}));
 
 export default function Chat() {
-  const [chatThreads, setChatThreads] = useState([]);
-  const [currentChatThread, setCurrentChatThread] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState(null);
-  const [matches, setMatches] = useState([]);
-  const [listings, setListings] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const socket = useRef();
   const { user, jwt } = useAuth();
   const scrollRef = useRef();
 
-  // 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
     socket.current.on("getMessage", (data) => {
       setArrivalMessage({
-        chatId: data.chatId,
         sender: data.senderId,
         text: data.text,
         createdAt: Date.now(),
@@ -86,293 +29,130 @@ export default function Chat() {
     });
   }, []);
 
-  // Process Arriving Messages
   useEffect(() => {
-    arrivalMessage && 
-      (currentChatThread?.id === arrivalMessage.chatId) &&
+    arrivalMessage &&
+      currentChat?.members.includes(arrivalMessage.sender) &&
       setMessages((prev) => [...prev, arrivalMessage]);
-  }, [arrivalMessage, currentChatThread]);
+  }, [arrivalMessage, currentChat]);
 
-
-  // Load and set all matches from the database
   useEffect(() => {
-    // Fetches all listings for the signed in flat account, 
-    // to then be used to fetch their matches
-    async function getListings() {
-      console.log('getListingByFlatId: ' + user.id + ' jwt: ' + jwt);
-      if (user && user !== null) {
-        await api.getListingByFlatId(user.id, jwt)
-        .then((res) => {
-          // For each 
-          const listings = res.data
-          listings.forEach((listing) => (
-            setListings([...listings, listing])
-          ))
-        }).catch((error) => {
-          console.log('error ' + error);
-        });
-
-        // Calls GetListingMatches below to set matches for each listing
-        listings.forEach(listing => {
-          getListingMatches(listing);
-        })
-      }
-    }
-
-    // Fetches all successful matches for a given listing
-    async function getListingMatches(listing) {
-      console.log('getListingMatches: ' + listing.id);
-      if (listing && listing !== null) {
-        await api.getListingMatches(listing.id, jwt)
-        .then((res) => {
-          // For each 
-          const matches = res.data
-          matches.forEach((match) => (
-            setMatches([...matches, match])
-          ))
-          
-          console.log(matches)
-        }).catch((error) => {
-          console.log('error ' + error);
-        })
-      }
-    }
-
-    // Fetches all successful matches for the signed in flatee
-    async function getFlateeMatches() {
-      console.log('getFlateeMatches: ' + user.id);
-      if (user && user !== null) {
-        await api.getFlateeMatches(user.id, jwt)
-        .then((res) => {
-          setMatches([...matches, res.data])
-          console.log(matches)
-        }).catch((error) => {
-          console.log('error ' + error);
-        });
-      }
-    }
-
-    // Fetch depending on user role
-    if (user && user.role === Role.Flat) {
-      getListings();
-      socket.current.emit("addUser", user.id);
-
-      // For Each match add its corrosponding chat or create one
-      matches.map(async(match) =>  (
-        await api.getChatByMatchId(match.id, jwt)
-        .then((res) => {
-          console.log(res.data);
-          // if no chat returned, then create chat
-          if (Object.keys(res.data).length === 0){ 
-            api.addChat(jwt, {matchId: match.id, messages: []})
-            .then((resp) => {
-              setChatThreads([...chatThreads, resp.data]);
-            })
-          } else {
-            setChatThreads([...chatThreads, res.data])
-          }
-        })
-      ))
-    } else if (user && user.role === Role.Flatee) {
-      getFlateeMatches();
-      socket.current.emit("addUser", user.id);
-
-      // For Each match add its corrosponding chat or create one
-      matches.map(async (match) => (
-        await api.getChatByMatchId(match.id, jwt)
-        .then((res) => {
-          console.log(res.data);
-          if (Object.keys(res.data).length === 0){ // Create Chat
-            api.addChat(jwt, {matchId: match.id, messages: []})
-            .then((resp) => {
-              setChatThreads([...chatThreads, resp.data]);
-            })
-          } else {
-            setChatThreads([...chatThreads, res.data])
-          }
-        })
-      ))
-    }
-
+    socket.current.emit("addUser", user._id);
+    socket.current.on("getUsers", (users) => {
+      setOnlineUsers(
+        user.followings.filter((f) => users.some((u) => u.userId === f))
+      );
+    });
   }, [user]);
 
-  // Load messages for current chat thread
   useEffect(() => {
-    if(currentChatThread != null) {
-      api.getMessages(currentChatThread.id, jwt)
-      .then((res) => {
-        setMessages(res.data);
-      })
-    }
-  }, [currentChatThread]);
+    const getConversations = async () => {
+      try {
+        const res = await axios.get("/conversations/" + user._id);
+        setConversations(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    getConversations();
+  }, [user._id]);
 
-  // Send Message
+  useEffect(() => {
+    const getMessages = async () => {
+      try {
+        const res = await axios.get("/messages/" + currentChat?._id);
+        setMessages(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    getMessages();
+  }, [currentChat]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const message = {
-      chatId: currentChatThread.id,
-      sender: user.id,
-      text: newMessage
+      sender: user._id,
+      text: newMessage,
+      conversationId: currentChat._id,
     };
 
-    // Find receiver's ID
-    let receiverId;
-    if (currentChatThread && user !== null) {
-      api.getMatchById(currentChatThread.matchId)
-      .then((res) => {
-        if(user.role === Role.Flat) {
-          receiverId = res.data.listingId
-        } else if(user.role === Role.Flatee){
-          receiverId = res.data.flateeId;
-        }
-      })
-    }
+    const receiverId = currentChat.members.find(
+      (member) => member !== user._id
+    );
 
     socket.current.emit("sendMessage", {
-      senderId: user.id,
+      senderId: user._id,
       receiverId,
       text: newMessage,
     });
 
-    // Add Message to DB
-    api.addMessageToChat(currentChatThread.id, jwt, message)
-    .then((res) => {
+    try {
+      const res = await axios.post("/messages", message);
       setMessages([...messages, res.data]);
       setNewMessage("");
-    })
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [messages]);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-            Clipped drawer
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {matches.map((t) => (
-              <ListItem button key={t.id}>
-                  <Avatar sx={{ bgcolor: deepOrange[500]} }>t.id</Avatar>
-                <ListItemText primary={t.id} />
-              </ListItem>
+    <>
+      <div>
+        <div className="chatMenu">
+          <div className="chatMenuWrapper">
+            <input placeholder="Search for friends" className="chatMenuInput" />
+            {conversations.map((c) => (
+              <div onClick={() => setCurrentChat(c)}>
+                <Conversation conversation={c} currentUser={user} />
+              </div>
             ))}
-          </List>
-        </Box>
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-      {currentChatThread ? (
-        // Messages
-        <>
-            {/* Messages */}
-            <div className="chatBoxTop">
-              {messages.map((m) => (
-                <div ref={scrollRef}>
-                  <Message message={m} own={m.sender === user._id} />
+          </div>
+        </div>
+        <div className="chatBox">
+          <div className="chatBoxWrapper">
+            {currentChat ? (
+              <>
+                <div className="chatBoxTop">
+                  {messages.map((m) => (
+                    <div ref={scrollRef}>
+                      <Message message={m} own={m.sender === user._id} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            
-            {/* Bottom Message Bar */}
-            <AppBar
-              position="fixed"
-              sx={{ top: 'auto', bottom: 0, width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px` }}
-            >
-              <Toolbar>
-                <MessageInput>
-                  <StyledInputBase
+                <div className="chatBoxBottom">
+                  <textarea
                     className="chatMessageInput"
-                    placeholder="Message..."
+                    placeholder="write something..."
                     onChange={(e) => setNewMessage(e.target.value)}
-                    value={newMessage} />
-                </MessageInput>
-                <IconButton
-                  size="large"
-                  aria-label="send message"
-                  color="inherit"
-                  className="chatSubmitButton"
-                  onClick={handleSubmit}
-                >
-                  <SendIcon />
-                </IconButton>
-              </Toolbar>
-            </AppBar></>
-      ) : (
-        <Typography variant="h6" className="noConversationText" component="span">
-          Open a match to start a chat.
-        </Typography>
-      )}
-      </Box>
-    </Box>
-      // {/* <Navigation /> */}
-      // <div className="chat">
-      //   <div className="chatMenu">
-      //     <div className="chatMenuWrapper">
-      //       <input placeholder="Search for matches" className="chatMenuInput" />
-      //       {console.log(chatThreads)}
-      //       {chatThreads.map((t) => (
-      //         <div onClick={() => setCurrentChatThread(t)}>
-      //           <Thread thread={t} />
-      //         </div>
-      //       ))}
-      //     </div>
-      //   </div>
-      //   <div className="chatBox">
-      //     <div className="chatBoxWrapper">
-      //       {currentChatThread ? (
-      //         <>
-      //           <div className="chatBoxTop">
-      //             {messages.map((m) => (
-      //               <div ref={scrollRef}>
-      //                 <Message message={m} own={m.sender === user._id} />
-      //               </div>
-      //             ))}
-      //           </div>
-      //           <div className="chatBoxBottom">
-      //             <textarea
-      //               className="chatMessageInput"
-      //               placeholder="write something..."
-      //               onChange={(e) => setNewMessage(e.target.value)}
-      //               value={newMessage}
-      //             ></textarea>
-      //             <button className="chatSubmitButton" onClick={handleSubmit}>
-      //               Send
-      //             </button>
-      //           </div>
-      //         </>
-      //       ) : (
-      //         <span className="noConversationText">
-      //           Open a match to start a chat.
-      //         </span>
-      //       )}
-      //     </div>
-      //   </div>
-        // {/* <div className="chatOnline">
-        //   <div className="chatOnlineWrapper">
-        //     <ChatOnline
-        //       currentChat={currentChatThread}
-        //       setCurrentChat={setCurrentChatThread}
-        //     />
-        //   </div>
-        // </div> */}
-      // </div>
-      // {/* <BottomNav /> */}
-    // </>
+                    value={newMessage}
+                  ></textarea>
+                  <button className="chatSubmitButton" onClick={handleSubmit}>
+                    Send
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span className="noConversationText">
+                Open a conversation to start a chat.
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="chatOnline">
+          <div className="chatOnlineWrapper">
+            {/* <Matches/> */}
+            {/* <ChatOnline
+              onlineUsers={onlineUsers}
+              currentId={user._id}
+              setCurrentChat={setCurrentChat}
+            /> */}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

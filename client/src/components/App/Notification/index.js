@@ -1,23 +1,30 @@
 import Notification from "./Notification";
 import React from "react";
 import { useEffect, useState } from "react";
-import api from "../../../utils/api"
+import axios from "axios";
+import { Config } from "../../../config"
 import { useAuth } from "../../App/Authentication";
 
 function Noti() {
   const { user, jwt } = useAuth();
   const [listItems, setListItems] = useState([]);
 
+    //Helper for ease of use when making axios calls
+  const instance = axios.create({
+    baseURL: Config.Local_API_URL,
+    timeout: 1000,
+    headers: { Authorization: `Bearer ${jwt}` }
+  })
+
   useEffect(() => {
     var tempNotis = [];
 
     async function getNotifications() {
-      await api.getUsersNotifications(jwt)
+      await instance.get('/notification')
         .then(res => {
           tempNotis = res.data
-        })
-        .catch(err => 
-          console.log(err))
+          
+        });
         
         tempNotis.forEach(notification => {
           setListItems(listItems => [...listItems, {
@@ -28,6 +35,7 @@ function Noti() {
                 message: notification.message,
                 link: notification.link,
                 read: notification.read,
+                id: notification.id,
               }
             ]
           }])

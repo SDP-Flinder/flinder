@@ -1,8 +1,8 @@
 import React from 'react'
-// import PlacesAutocomplete, {
-//     geocodeByAddress,
-//     getLatLng,
-// } from 'react-places-autocomplete';
+import PlacesAutocomplete, {
+    geocodeByAddress,
+    getLatLng,
+} from 'react-places-autocomplete';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -44,27 +44,27 @@ const Address = (props) => {
         const addressComp = address.split(',');
 
         //Get the user address from Google API
-        // geocodeByAddress(address)
-        //   .then(results => {
-        //       getLatLng(results[0])
+        geocodeByAddress(address)
+          .then(results => {
+              getLatLng(results[0])
 
-        //       setAddress(results[0].formatted_address);
-        //       let currentAddress = {
-        //           street: '',
-        //           suburb: '',
-        //           city: '',
-        //           country: '',
-        //       }
+              setAddress(results[0].formatted_address);
+              let currentAddress = {
+                  street: '',
+                  suburb: '',
+                  city: '',
+                  country: '',
+              }
 
-        //       assignComponentAddress(results, currentAddress);
+              assignComponentAddress(results, currentAddress);
 
-        //       if(currentAddress.suburb == ''){
-        //           currentAddress.suburb = addressComp[1];
-        //       }
+              if(currentAddress.suburb === ''){
+                  currentAddress.suburb = addressComp[1];
+              }
 
-        //       setComponent(currentAddress);
-        //     })
-        //   .catch(error => console.error('Error', error));
+              setComponent(currentAddress);
+            })
+          .catch(error => console.error('Error', error));
     };
 
     //Find any errors from the user iputs
@@ -111,14 +111,14 @@ const Address = (props) => {
             </Typography>
             {!manual && <div>
             <div className = "display-address-search">
-            {/* <PlacesAutocomplete 
+            <PlacesAutocomplete 
             className = "autocomplete-dropdown-container "
             name = "address"
             value={addressName}
             onChange={setAddress}
             onSelect={handleSelect}
-            > */}
-            {/* {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
+            >
+            {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
             <div>
                 <input
                 {...getInputProps({
@@ -150,7 +150,7 @@ const Address = (props) => {
                 </div>
             </div>
             )}
-            </PlacesAutocomplete> */}
+            </PlacesAutocomplete>
             {addressName && 
             <IconButton onClick = {clearAddress}>
                 <ClearIcon/>
@@ -293,11 +293,11 @@ const Address = (props) => {
         return () => {
             const errorFound = {};
 
-            if (componentAddress.country != 'New Zealand') {
+            if (componentAddress.country !== 'New Zealand') {
                 errorFound.country = 'This app is only currently available for New Zealand adresses.';
             }
 
-            if(componentAddress.country == 'New Zealand'){
+            if(componentAddress.country === 'New Zealand'){
 
                 switch(componentAddress.city.toLowerCase()){
                     case "auckland":
@@ -315,10 +315,10 @@ const Address = (props) => {
             }
 
             for (let k = 0; k < repo.length; k++) {
-                if (repo[k].role == 'flat') {
-                    if (repo[k].address.street == componentAddress.street
-                        && repo[k].address.suburb == componentAddress.suburb
-                        && repo[k].address.city == componentAddress.city) {
+                if (repo[k].role === 'flat') {
+                    if (repo[k].address.street === componentAddress.street
+                        && repo[k].address.suburb === componentAddress.suburb
+                        && repo[k].address.city === componentAddress.city) {
                         errorFound.street = "This address has already been used.";
                     }
                 }
@@ -373,24 +373,24 @@ async function getToken() {
 
 function assignComponentAddress(results, currentAddress) {
     for (let k = 0; k < results[0].address_components.length; k++) {
-        if (results[0].address_components[k].types[0] == 'street_number') {
+        if (results[0].address_components[k].types[0] === 'street_number') {
             currentAddress.street += results[0].address_components[k].long_name;
         }
 
-        if (results[0].address_components[k].types[0] == 'route') {
+        if (results[0].address_components[k].types[0] === 'route') {
             currentAddress.street += ' ';
             currentAddress.street += results[0].address_components[k].long_name;
         }
 
-        if (results[0].address_components[k].types[1] == 'sublocality') {
+        if (results[0].address_components[k].types[1] === 'sublocality') {
             currentAddress.suburb = results[0].address_components[k].long_name;
         }
 
-        if (results[0].address_components[k].types[0] == 'administrative_area_level_1') {
+        if (results[0].address_components[k].types[0] === 'administrative_area_level_1') {
             currentAddress.city = results[0].address_components[k].long_name;
         }
 
-        if (results[0].address_components[k].types[0] == 'country') {
+        if (results[0].address_components[k].types[0] === 'country') {
             currentAddress.country = results[0].address_components[k].long_name;
         }
 

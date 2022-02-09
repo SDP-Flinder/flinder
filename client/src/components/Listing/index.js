@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
-import api from '../../utils/api';
-import { Role, useAuth } from '../App/Authentication';
+import axios from 'axios';
+import { useAuth } from '../App/Authentication';
 import Link from '@material-ui/core/Link';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -63,6 +63,13 @@ function ListingList(props) {
   const [listings, setListings] = useState([]);
   const [open, setOpen] = useState(false);
 
+  //Helper axios calls
+  const instance = axios.create({
+    baseURL: Config.Local_API_URL,
+    timeout: 1000,
+    headers: { Authorization: `Bearer ${jwt}` }
+  })
+
   //Passes the selected listing to the listing page for displaying
   function selectListing(id) {
     props.history.push({
@@ -108,25 +115,20 @@ function ListingList(props) {
 
   //Fetch all listings owned by the current user on page load
   useEffect(() => {
-    if(user && user.role === Role.Flat) {
-      api.getListingByFlatId(user.id, jwt)
-      .then((res) => {
-        setListings(res.data);
-      })
-      .catch((err) => {
-        console.log(`${user.id} doesn't have any listings`);
-      })
-    } else if (user && user.role === Role.Flatee) {
-      api.getListingById(user.id, jwt)
-      .then((res) => {
-        setListings(res.data);
-      })
-      .catch((err) => {
-        console.log(`${user.id} doesn't have any listings`);
-      })
+    async function getListings() {
+      const listings = await instance.get('/listings/flat/'.concat(user.id));
+      setListings(listings.data);
     }
-    
-  }, [user, jwt, open])
+    getListings();
+  }, [user, jwt])
+
+  useEffect(() => {
+    async function getListings() {
+      const listings = await instance.get('/listings/flat/'.concat(user.id));
+      setListings(listings.data);
+    }
+    getListings();
+  }, [open])
 
   return (
     <Container component="main" maxWidth="xs">

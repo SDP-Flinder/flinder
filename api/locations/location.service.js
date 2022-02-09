@@ -22,9 +22,7 @@ async function getById(id) {
 }
 
 async function create(locationParam) {
-    console.log('fuck you: ',çlocationParam);
     const location = new Location(locationParam);
-    console.log('location details: ', location);
 
     // save location
     await location.save();

@@ -15,7 +15,7 @@ module.exports = router;
 
 function add(req, res, next) {
     locationService.create(req.body)
-        .then((msg) => (msg == 'user-created') ? authenticate((req.body.username, req.body.password), res, next) : res.json({message: msg}))
+        .then((msg) => (msg === 'user-created') ? authenticate((req.body.username, req.body.password), res, next) : res.json({message: msg}))
         .catch(err => next(err));
 }
 

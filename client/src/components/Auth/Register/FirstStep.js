@@ -58,7 +58,7 @@ const FirstStep = (props) => {
     //Password constraints
     passwordCheck(password, foundError);
 
-    if(!accountType || accountType == ''){
+    if(!accountType || accountType === ''){
       foundError.accountType = 'Choose one';
     }
 
@@ -70,11 +70,11 @@ const FirstStep = (props) => {
     let userExist = {};
 
     for(let k = 0; k < repo.length; k++){
-      if(repo[k].username == username){
+      if(repo[k].username === username){
         userExist.username = 'username';
       }
       
-      if(repo[k].email == email){
+      if(repo[k].email === email){
         userExist.email = 'email';
       }
     }
@@ -92,9 +92,9 @@ const FirstStep = (props) => {
     {
 
       //Redirect to the correct route
-      if(user.accountType == 'flat'){
+      if(user.accountType === 'flat'){
         navigation.go("flat-information");
-      }else if(user.accountType == 'flatee'){ 
+      }else if(user.accountType === 'flatee'){ 
         navigation.go("flat-information");
       }else if(user.accountType ==''){
           alert('Choose one bitch!');
@@ -231,7 +231,7 @@ function emailCheck(email, foundError, userExist) {
     foundError.email = 'Please enter a valid email address';
   }
 
-  if (userExist.email == 'email') {
+  if (userExist.email === 'email') {
     foundError.email = 'Email already exists';
   }
 }
@@ -255,7 +255,7 @@ function usernameCheck(username, foundError, userExist) {
     foundError.username = 'Username should have at least 6 characters.';
   }
 
-  if (userExist.username == 'username') {
+  if (userExist.username === 'username') {
     foundError.username = 'Username already exists';
   }
 }

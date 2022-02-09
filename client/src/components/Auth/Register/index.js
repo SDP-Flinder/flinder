@@ -153,7 +153,7 @@ export default function SignUp ({ location }) {
         {isAuthed && <Redirect to={from} />}
         <FlinderLogo className = "logo-display"/>
        {renderStep(step, prop, user, updateUser)}
-       {(step.id == "flatee-review" || step.id == "flat-checklist") && 
+       {(step.id === "flatee-review" || step.id === "flat-checklist") && 
         <div>
         <Button className = "single-button"
         variant="contained" color="primary" onClick = {handleSignUp}

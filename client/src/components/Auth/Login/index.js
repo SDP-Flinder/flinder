@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Button, Container, CssBaseline, TextField, FormControlLabel, Checkbox, Link, Grid, Box, Typography} from '@material-ui/core';
+import {Avatar, Button, Container, CssBaseline, TextField, FormControlLabel, Checkbox, Link, Grid, Box, Typography} from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Alert from '@material-ui/lab/Alert';
 import { Link as RouterLink, Redirect } from "react-router-dom";
@@ -52,7 +52,7 @@ const Login = ({ location }) => {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect to previous page or home page
+  // Reditect to previous page or home page
   let { from } = location.state || { from: { pathname: "/" } };
 
   const handleLogin = (e) => {
@@ -60,9 +60,10 @@ const Login = ({ location }) => {
     signin(username, password, remember)
       .then((res) => {
         console.log(res?.message)
-        if (res?.error || res?.message) { 
-          // Display Error Message
-          setError(res?.error || res?.message);
+        // if (res.status === 400){ //incorrect username or password
+        if (res?.error || res?.message) { //TODO: Display correct error message
+          // setError(res?.error || res?.message);
+          setError('Username or password incorrect')
         }
       })
       .catch((error) => {

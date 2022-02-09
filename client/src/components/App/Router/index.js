@@ -18,8 +18,8 @@ import Match from "../../Match";
 import MatchDetails from "../../Match/MatchDetails";
 import BottomNav from "../Navigation/BottomNav";
 import FAQ from "../FAQ";
+import Chat from "../../Chat"
 import { useLocation } from "react-router";
-import Chat from "../../Chat";
 
 //Display the navigation bar if the user is in those 3 routes
 const displayNav = (route) => {

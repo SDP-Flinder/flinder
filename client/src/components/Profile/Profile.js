@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
@@ -8,8 +8,9 @@ import { useAuth } from "../App/Authentication";
 import { Slide } from "@material-ui/core";
 import moment from "moment";
 import EditDialog from "./EditBio/EditDialog";
-import { Link } from 'react-router-dom';
+import { Link, Link as RouterLink } from 'react-router-dom';
 import Confirmation from "./EditBio/Confirmation";
+import axios from "axios";
 
 
 //use for animation
@@ -47,7 +48,7 @@ const useStyles = makeStyles(theme => ({
     parentPaper: {
         padding: theme.spacing(2),
         margin: "auto",
-        maxWidth: 1600
+        maxWidth: 1600,
     },
     standalone: {
         padding: theme.spacing(1),
@@ -218,7 +219,7 @@ const renderFlatInfo = (classes, user, handleClickOpen, leaseExpired) => (
                 </Grid>
                 <Grid item xs={6}>
                     <Paper className={classes.userInfo}>
-                        {user.flatRules == undefined ? 'N/A' : [user.flatRules.smoking == true ? 'Allowed' : 'Not allowed']}
+                        {user.flatRules === undefined ? 'N/A' : [user.flatRules.smoking === true ? 'Allowed' : 'Not allowed']}
                     </Paper>
                 </Grid>
                 <Grid item xs={6}>
@@ -226,7 +227,7 @@ const renderFlatInfo = (classes, user, handleClickOpen, leaseExpired) => (
                 </Grid>
                 <Grid item xs={6}>
                     <Paper className={classes.userInfo}>
-                        {user.flatRules == undefined ? 'N/A' : [user.flatRules.pets == true ? 'Allowed' : 'Not allowed']}
+                        {user.flatRules === undefined ? 'N/A' : [user.flatRules.pets === true ? 'Allowed' : 'Not allowed']}
                     </Paper>
                 </Grid>
 
@@ -359,15 +360,16 @@ const renderFlateeBio = (classes, user, handleClickOpen) => (
     </Grid>
 )
 
-// const getUser = () => {
-//     const { user } = useAuth();
+function User(props) {
+    const { user } = useAuth();
 
-//     return user;
-// }
+    return user;
+}
 
 export default function Profile() {
     const classes = useStyles();
-    const {user, setUser} = useAuth();
+    const {jwt} = useAuth();
+    const [user, setUser] = React.useState(User());
     user.password = '';
     if (!user.rentUnits) {
         user.rentUnits = 'Per Week';
@@ -397,6 +399,41 @@ export default function Profile() {
         window.location.reload();
     }
 
+    //Post the photo
+    const [photo, setPhoto] = React.useState({});
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        console.log(photo);
+        
+        if(!photo || photo === ''){
+            window.alert('Please choose a file.');
+        }
+        else
+        {
+
+        const URL = 'http://localhost:4000/'.concat("users/photo/").concat(user.id);
+
+        const formData = new FormData();
+
+        formData.append('profileImage', photo);
+
+        const config = {
+            headers: {
+            Authorization: `Bearer ${jwt}`,
+                
+            'content-type': 'multipart/form-data'
+            }
+        }
+
+       await axios.put(URL, formData, config).then(setConfirmation(true)).catch(err =>console.log(err));
+        }
+    }
+
+    let photoDisplay = "http://localhost:4000/";
+    const [editPhoto, setEditPhoto] = React.useState(true);
+
     return (
         <div className={classes.root}>
             <Paper className={classes.parentPaper}>
@@ -412,8 +449,27 @@ export default function Profile() {
                             <Slide direction="up" in={checked} mountOnEnter unmountOnExit>
                                 <Grid item xs={5}>
                                     <Paper variant="outlined" className={classes.first}>
-                                        Photo goes here <br />
-                                        <Button variant="contained" color="primary">Add photo button</Button>
+                                        {
+                                        (user.photo && editPhoto) ?
+                                        <div>
+                                        <img className = "avt"
+                                        src = {photoDisplay.concat(user.photo)} />
+                                        <br/>
+                                        <Button onClick = {() => setEditPhoto(!editPhoto)}>
+                                            Edit 
+                                        </Button>
+                                        </div>
+                                        :
+                                        <div>
+                                        {addPhoto()}
+                                        <br/>
+                                        {user.photo &&
+                                        <Button
+                                        onClick = {() => setEditPhoto(!editPhoto)}>
+                                             Cancel 
+                                        </Button>}
+                                        </div>
+                                        }
                                     </Paper>
                                 </Grid>
                             </Slide>
@@ -435,13 +491,13 @@ export default function Profile() {
                                         <Slide
                                             direction="up" in={checked} mountOnEnter unmountOnExit
                                         >
-                                            {user.role == 'flat' ? renderFlatInfo(classes, user, handleClickOpen, leaseExpired) :
+                                            {user.role === 'flat' ? renderFlatInfo(classes, user, handleClickOpen, leaseExpired) :
                                                 renderFlateeInfo(classes, user, handleClickOpen)}
 
                                         </Slide>
 
 
-                                        {user.role == 'flatee' &&
+                                        {user.role === 'flatee' &&
                                             <Slide
                                                 direction="up" in={checked} mountOnEnter unmountOnExit
                                             >
@@ -493,4 +549,27 @@ export default function Profile() {
             />
         </div>
     );
+
+    function addPhoto() {
+        return <form onSubmit={handleSubmit}>
+            <input
+                id = "profile-photo"
+                type="file"
+                accept="image/*"
+                onChange={e => {
+                    setPhoto(e.target.files[0]);
+                } }
+            />
+            <br/>
+            <br/>
+
+            <Button 
+            variant="contained" 
+            color="primary"
+            type="submit"
+            >
+                Add photo
+            </Button>
+        </form>;
+    }
 }

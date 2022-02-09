@@ -65,6 +65,7 @@ const UserSchema = new Schema({
 
   bio: { type: String },
   rentUnits: {type: String},
+  photo: {type: String},
 });
 
 UserSchema.set('toJSON', {

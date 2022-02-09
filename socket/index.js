@@ -20,7 +20,7 @@ const io = require("socket.io")(8900, {
   };
   
   io.on("connection", (socket) => {
-    //when ceonnect
+    //when connect
     console.log("a user connected.");
   
     //take userId and socketId from user

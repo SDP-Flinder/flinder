@@ -1,5 +1,6 @@
 import "../../style/message.css";
 import { format } from "timeago.js";
+import React from "react";
 
 export default function Message({ message, own }) {
   return (

@@ -7,9 +7,10 @@ import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import NumberFormat from 'react-number-format';
-import api from '../../utils/api';
+import axios from 'axios';
 import { useAuth } from '../App/Authentication';
 import { makeStyles } from '@material-ui/core/styles';
+import { Config } from '../../config';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
@@ -38,8 +39,10 @@ function CreateListing(props) {
   const classes = useStyles();
   const { user, jwt } = useAuth();
   const currentDate = new Date();
+
   const [error, setError] = useState({});
   const [isInvalid, setInvalid] = useState({});
+
   const [description, setDescription] = useState("");
   const [roomAvailable, setRoomAvailable] = useState(currentDate);
   const [rent, setRent] = useState(0);
@@ -48,6 +51,12 @@ function CreateListing(props) {
   const [water, setWater] = useState(false);
   const [internet, setInternet] = useState(false);
 
+  //Helper axios calls
+  const instance = axios.create({
+    baseURL: Config.Local_API_URL,
+    timeout: 1000,
+    headers: { Authorization: `Bearer ${jwt}` }
+  })
 
   //Method to check if an error is detected on form submit - rent can't be $0
   const findError = () => {
@@ -113,7 +122,7 @@ function CreateListing(props) {
       },
       active: true
     };
-    api.addListing(jwt, bodyParameters);
+    instance.post('/listings/add/', bodyParameters);
   }
 
   return (
@@ -188,21 +197,21 @@ function CreateListing(props) {
                 <Stack direction="row" spacing={2}>
                   <Chip
                     label="Power"
-                    variant={power == false ? "outlined" : "default"}
+                    variant={power === false ? "outlined" : "default"}
                     onClick={changePower}
-                    color={power == false ? "default" : "primary"}
+                    color={power === false ? "default" : "primary"}
                   />
                   <Chip
                     label="Water"
-                    variant={water == false ? "outlined" : "default"}
+                    variant={water === false ? "outlined" : "default"}
                     onClick={changeWater}
-                    color={water == false ? "default" : "primary"}
+                    color={water === false ? "default" : "primary"}
                   />
                   <Chip
                     label="Internet"
-                    variant={internet == false ? "outlined" : "default"}
+                    variant={internet === false ? "outlined" : "default"}
                     onClick={changeInternet}
-                    color={internet == false ? "default" : "primary"}
+                    color={internet === false ? "default" : "primary"}
                   />
                 </Stack>
               </Grid>

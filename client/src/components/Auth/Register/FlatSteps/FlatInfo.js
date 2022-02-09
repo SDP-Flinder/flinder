@@ -63,7 +63,7 @@ const FlatInfo = (props) => {
           setInvalid(newError.invalid);
 
         }else{
-          if(props.user.accountType == 'flat'){
+          if(props.user.accountType === 'flat'){
             navigation.go("flat-address");
           }else{
             navigation.go("flatee-area");

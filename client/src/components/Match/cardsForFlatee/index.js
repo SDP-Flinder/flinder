@@ -1,17 +1,27 @@
-import React, {useState, useEffect, useMemo} from 'react';
+// import react and its hooks
+import React, {
+  useState, useEffect, useMemo,
+} from 'react';
+// import _isEqual function
 import _isEqual from 'lodash/isEqual';
+// import material ui components
 import CloseIcon from '@material-ui/icons/Close';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import IconButton from '@material-ui/core/IconButton';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+// import TinderCards
 import TinderCard from 'react-tinder-card';
-import api from '../../../utils/api';
+// import base url
+import {
+  instance, matchesForFlatee, unmatch, addListing,
+} from '../../../utils/requests';
+// import styles
 import './styles.css';
+// import moment for date formatting
 import * as moment from 'moment';
+// import session user state
 import { useAuth } from '../../App/Authentication';
 import ShowInfo from '../ShowInfo';
-import { Typography } from '@material-ui/core';
-import {WaveSpinner} from "react-spinners-kit";
 
 // create cards component and export it
 const CardsForFlatee = (props) => {
@@ -20,11 +30,11 @@ const CardsForFlatee = (props) => {
   const [listings, setListings] = useState([]);
   const [readMore, setReadMore] = useState(null);
   const [showMore, setShowMore] = useState(true);
-
-  const [loading, setLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const childRefs = useMemo(() => Array(listings.length).fill(0).map((i) => React.createRef()));
-  const flateeUser = user;
+
+  const AuthString = 'Bearer '.concat(jwt);
+  const flateeUser = user.username; // RETRIEVE FLATEE_USERNAME
   let matchparam = {
     flateeUsername: flateeUser,
   };
@@ -32,31 +42,28 @@ const CardsForFlatee = (props) => {
   // use effect to gather potential listings for this flatee
   useEffect(() => {
     async function fetchListings() {
-      setLoading(true);
-      // Get Listings from API 
-      api.getPotFlateeMatches(jwt, matchparam)
-      .then((res) => setListings(res.data))
-      .catch((err) => console.log(err))
-      setLoading(false);
+      await instance.get(matchesForFlatee, {
+        params: matchparam,
+        headers: { Authorization: AuthString },
+      })
+        .then((res) => {
+          setListings(res.data);
+        });
     }
 
     fetchListings();
   }, []);
 
   // swipe function
-  const swiped = (direction, id, username) => {
+  const swiped = (direction, id) => {
     matchparam = {
       flateeUsername: flateeUser,
-      flateeID: user.id,
-      listingUsername: username,
       listingID: id,
     };
     if (_isEqual(direction, 'left')) {
-      // API unmatch
-      api.unmatch(jwt, matchparam);
+      instance.put(unmatch, matchparam, { headers: { Authorization: AuthString } });
     } else if (_isEqual(direction, 'right')) {
-      // API add Listing
-      api.addListing(jwt, matchparam);
+      instance.post(addListing, matchparam, { headers: { Authorization: AuthString } });
     }
     alreadyRemoved.push(id);
 
@@ -103,13 +110,6 @@ const CardsForFlatee = (props) => {
   return (
     <>
       {/* All the cards */}
-      {loading ? 
-      <div className = "loading">
-      <WaveSpinner size = {50} color="#007A78" loading={loading} />
-      <Typography>
-        Getting profiles...
-      </Typography>
-      </div>:
       <div className="cards">
         <div className="cards__cardContainer">
           {listings.map((listing, index) => (
@@ -120,7 +120,7 @@ const CardsForFlatee = (props) => {
               flickOnSwipe
               preventSwipe={['up', 'down']}
               currentFlatCard={listing.id}
-              onSwipe={(dir) => swiped(dir, listing.listing.id, listing.accountUser.username)}
+              onSwipe={(dir) => swiped(dir, listing.listing.id)}
             >
               {/* Background image */}
               <div
@@ -145,7 +145,7 @@ const CardsForFlatee = (props) => {
           ))}
         </div>
         {/* Swipe buttons */}
-        {listings.length > 0 ?
+        {listings.length > 0 &&
         <div className="swipe-buttons">
           <IconButton
             onClick={() => swipe('left')}
@@ -159,15 +159,8 @@ const CardsForFlatee = (props) => {
           >
             <FavoriteIcon fontSize="large" />
           </IconButton>
-        </div> : 
-        <div style = {{justifyContent: "center", margin: 150}}>
-          <Typography variant = "body1">
-            There is currently no profile that matches your preferences
-            <br />
-            Expand your options by clicking on the filter button above.
-          </Typography>
         </div>}
-      </div>}
+      </div>
     </>
   );
 };
